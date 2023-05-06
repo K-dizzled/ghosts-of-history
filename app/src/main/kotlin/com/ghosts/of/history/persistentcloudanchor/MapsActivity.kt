@@ -25,6 +25,8 @@ import com.google.android.gms.maps.model.MarkerOptions
 
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.ghosts.of.history.utils.AnchorData
+import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.location.LocationServices
@@ -74,10 +76,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
-    fun addMarkers() {
-        val sydney = LatLng(-34.0, 151.0)
-        var marker = map?.addMarker(MarkerOptions().position(sydney).title("Жопа Андрея").snippet("Сюда лучше не соваться"))
-        marker?.tag = false
+    fun addMarkers(anchors: List<AnchorData>) {
+        for(anchor in anchors) {
+            val markerPosition = anchor.geoPosition?.let { LatLng(it.latitude, anchor.geoPosition.longitude) }
+            val marker = map?.addMarker(MarkerOptions()
+                    .position(markerPosition ?: LatLng(0.0, 0.0))
+                    .title(anchor.name)
+                    .snippet(anchor.description ?: "Default description"))
+            marker?.tag = false
+        }
+    }
+
+    fun handleMarkers(anchors: List<AnchorData>) {
+        addMarkers(anchors)
     }
 
     /**
@@ -95,7 +106,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         map = googleMap
         
         // Add a marker in Sydney and move the camera
-        addMarkers()
+        getAnchorsDataFromFirebase(::handleMarkers)
         map?.setOnInfoWindowClickListener(InfoWindowActivity())
         map?.setOnMarkerClickListener(this)
         map?.setInfoWindowAdapter(InfoWindowAdapter())
