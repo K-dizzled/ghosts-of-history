@@ -109,6 +109,10 @@ fun fetchImageFromStorage(path: String, context: Context, onSuccessCallback: (Fi
             val stream = connection.getInputStream()
             val randomFilename = UUID.randomUUID().toString() + File(path).name
             val downloadingMediaFile = File(context.cacheDir, randomFilename)
+
+            val out = FileOutputStream(downloadingMediaFile)
+            stream.copyTo(out)
+            onSuccessCallback(downloadingMediaFile)
         }
     }
 }
