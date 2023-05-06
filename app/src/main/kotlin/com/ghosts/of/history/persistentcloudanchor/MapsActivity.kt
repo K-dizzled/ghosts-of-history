@@ -10,8 +10,11 @@ import com.ghosts.of.history.databinding.ActivityMapsBinding
 import android.annotation.SuppressLint
 import android.location.Location
 import android.Manifest
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.core.app.ActivityCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -24,6 +27,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
 import android.util.Log
+import android.widget.Button
 import androidx.core.content.ContextCompat
 import com.ghosts.of.history.utils.AnchorData
 import com.ghosts.of.history.utils.MarkerStorage
@@ -50,6 +54,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
     private var lastKnownLocation: Location? = null
+    private lateinit var popUpDialog: Dialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +68,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+        popUpDialog = Dialog(this)
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -71,6 +77,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         val arButton = findViewById<MaterialButton>(R.id.ar_button)
         arButton.setOnClickListener { onARButtonPressed() }
+        supportActionBar?.hide()
     }
 
     fun onARButtonPressed() {
@@ -240,9 +247,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         private const val M_MAX_ENTRIES = 5
     }
 
+    private fun showPopup(label: String, description: String) {
+        popUpDialog.setContentView(R.layout.activity_marker_popup)
+
+        val popUpClose = popUpDialog.findViewById<View>(R.id.txtclose) as TextView
+        popUpClose.setOnClickListener { popUpDialog.dismiss() }
+
+        val popUpLabel = popUpDialog.findViewById<View>(R.id.name) as TextView
+        popUpLabel.text = label
+
+        val popUpDescription = popUpDialog.findViewById<View>(R.id.description) as TextView
+        popUpDescription.text = description
+
+        popUpDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popUpDialog.show()
+    }
+
     /** Called when the user clicks a marker.  */
     override fun onMarkerClick(marker: Marker): Boolean {
-        return false
+        showPopup(
+                marker.title ?: "No title",
+                marker.snippet ?: "No description"
+        )
+        return true
     }
 
     internal inner class InfoWindowAdapter : GoogleMap.InfoWindowAdapter {
