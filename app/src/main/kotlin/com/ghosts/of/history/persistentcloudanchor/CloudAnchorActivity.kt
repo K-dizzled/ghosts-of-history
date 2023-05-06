@@ -440,8 +440,14 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                     }
                 }
                 val closestAnchor = resolvedAnchors.filter { anchor ->
+                    val cameraPose = camera.pose
+                    val anchorPose = anchor.pose
+                    val x = cameraPose.tx() - anchorPose.tx()
+                    val y = cameraPose.ty() - anchorPose.ty()
+                    val z = cameraPose.tz() - anchorPose.tz()
+                    val distMeters = x * x + y * y + z * z
                     anchor.pose.getTranslation(anchorTranslation, 0)
-                    isWorldPositionVisible(anchorTranslation)
+                    isWorldPositionVisible(anchorTranslation) || distMeters < DISAPPEAR_DISTANCE
                 }.minByOrNull { anchor ->
                     val cameraPose = camera.pose
                     val anchorPose = anchor.pose
@@ -728,6 +734,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         const val PREFERENCE_FILE_KEY = "CLOUD_ANCHOR_PREFERENCES"
         private const val MIN_DISTANCE = 0.2
         private const val MAX_DISTANCE = 10.0
+        private const val DISAPPEAR_DISTANCE =55.0
         fun newHostingIntent(packageContext: Context?): Intent {
             val intent = Intent(packageContext, CloudAnchorActivity::class.java)
             intent.putExtra(EXTRA_HOSTING_MODE, true)
