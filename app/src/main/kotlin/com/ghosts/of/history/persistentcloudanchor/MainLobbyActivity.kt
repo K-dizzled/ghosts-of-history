@@ -33,6 +33,7 @@ class MainLobbyActivity : AppCompatActivity() {
         hostButton.setOnClickListener { onHostButtonPress() }
         val resolveButton = findViewById<MaterialButton>(R.id.begin_resolve_button)
         resolveButton.setOnClickListener { onResolveButtonPress() }
+        supportActionBar?.hide()
     }
 
     override fun onResume() {
