@@ -10,6 +10,7 @@ import com.ghosts.of.history.databinding.ActivityMapsBinding
 import android.annotation.SuppressLint
 import android.location.Location
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 
@@ -27,6 +28,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.button.MaterialButton
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private var map: GoogleMap? = null
@@ -61,6 +63,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
+
+        val arButton = findViewById<MaterialButton>(R.id.ar_button)
+        arButton.setOnClickListener { onARButtonPressed() }
+    }
+
+    fun onARButtonPressed() {
+        Intent(this, MainLobbyActivity::class.java).also { intent ->
+            startActivity(intent)
+        }
     }
 
     fun addMarkers() {
