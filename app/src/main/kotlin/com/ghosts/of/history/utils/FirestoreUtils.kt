@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileDescriptor
 import java.io.FileOutputStream
 import java.net.URL
 import java.util.*
@@ -44,8 +45,11 @@ fun getAnchorsDataFromFirebase(onSuccessCallback: (List<AnchorData>) -> Unit) {
                 result.map {
                     val latitude = it.get("latitude")
                     val longitude = it.get("longitude")
+                    println(it.get("description"))
                     AnchorData(
                             it.get("id") as String,
+                            it.get("name") as String,
+                            it.get("description") as String?,
                             it.get("video_name") as String,
                             (it.get("scaling_factor") as Number).toFloat(),
                             if (latitude != null && longitude != null) {
@@ -60,7 +64,7 @@ fun getAnchorsDataFromFirebase(onSuccessCallback: (List<AnchorData>) -> Unit) {
 
 data class GeoPosition(val latitude: Double, val longitude: Double)
 
-data class AnchorData(val anchorId: String, val videoName: String, val scalingFactor: Float,
+data class AnchorData(val anchorId: String, val name: String, val description: String?, val videoName: String, val scalingFactor: Float,
                         val geoPosition: GeoPosition?)
 
 // onSuccessCallback processes just a video name
