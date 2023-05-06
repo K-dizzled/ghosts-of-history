@@ -42,16 +42,26 @@ fun getAnchorsDataFromFirebase(onSuccessCallback: (List<AnchorData>) -> Unit) {
             .get()
             .addOnSuccessListener { result ->
                 result.map {
+                    val latitude = it.get("latitude")
+                    val longitude = it.get("longitude")
                     AnchorData(
                             it.get("id") as String,
                             it.get("video_name") as String,
-                            (it.get("scaling_factor") as Number).toFloat()
+                            (it.get("scaling_factor") as Number).toFloat(),
+                            if (latitude != null && longitude != null) {
+                                GeoPosition((latitude as Number).toDouble(), (longitude as Number).toDouble())
+                            } else {
+                                null
+                            }
                     )
                 }.let(onSuccessCallback)
             }
 }
 
-data class AnchorData(val anchorId: String, val videoName: String, val scalingFactor: Float)
+data class GeoPosition(val latitude: Double, val longitude: Double)
+
+data class AnchorData(val anchorId: String, val videoName: String, val scalingFactor: Float,
+                        val geoPosition: GeoPosition?)
 
 // onSuccessCallback processes just a video name
 fun processAnchorDescription(anchorId: String, onSuccessCallback: (String?) -> Unit) {
