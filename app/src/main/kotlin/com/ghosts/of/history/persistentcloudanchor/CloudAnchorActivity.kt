@@ -15,6 +15,7 @@
  */
 package com.ghosts.of.history.persistentcloudanchor
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -30,6 +31,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.GuardedBy
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.ghosts.of.history.R
 import com.ghosts.of.history.common.helpers.*
@@ -40,6 +42,7 @@ import com.ghosts.of.history.utils.AnchorData
 import com.ghosts.of.history.utils.fetchVideoFromStorage
 import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
 import com.ghosts.of.history.utils.saveAnchorToFirebase
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.ar.core.*
 import com.google.ar.core.ArCoreApk.InstallStatus
 import com.google.ar.core.Config.CloudAnchorMode
@@ -51,6 +54,30 @@ import java.io.IOException
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.hypot
+import android.text.TextUtils
+import android.view.View
+import com.ghosts.of.history.databinding.ActivityMapsBinding
+import android.annotation.SuppressLint
+import android.location.Location
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+
+import com.ghosts.of.history.utils.MarkerStorage
+import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.material.button.MaterialButton
 
 /**
  * Main Activity for the Persistent Cloud Anchor Sample.
@@ -64,6 +91,11 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     private enum class HostResolveMode {
         HOSTING, RESOLVING
     }
+
+    // Geolocation
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private var locationPermissionGranted = false
+
 
     // Rendering. The Renderers are created here, and initialized when the GL surface is created.
     private lateinit var surfaceView: GLSurfaceView
@@ -119,8 +151,12 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     private var anchorIdToAnchorData: Map<String, AnchorData> = emptyMap()
     private var cloudAnchorManager: CloudAnchorManager? = null
     private var currentMode: HostResolveMode? = null
+    private var lastKnownLocation: Location? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.cloud_anchor)
         surfaceView = findViewById(R.id.surfaceview)
@@ -146,6 +182,43 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
             HostResolveMode.RESOLVING
         }
         showPrivacyDialog()
+        getLocationPermission()
+    }
+
+    private fun getLocationPermission() {
+        /*
+         * Request location permission, so that we can get the location of the
+         * device. The result of the permission request is handled by a callback,
+         * onRequestPermissionsResult.
+         */
+        if (ContextCompat.checkSelfPermission(this.applicationContext,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            locationPermissionGranted = true
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    1)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getDeviceLocation() {
+        /*
+         * Get the best and most recent location of the device, which may be null in rare
+         * cases when a location is not available.
+         */
+        try {
+            if (locationPermissionGranted) {
+                val locationResult = fusedLocationProviderClient.lastLocation
+                locationResult.addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful && task.result != null) {
+                        lastKnownLocation = task.result
+                    }
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e("Exception: %s", e.message, e)
+        }
     }
 
     private fun setUpTapListener() {
@@ -693,14 +766,16 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                 Log.i(TAG, "Anchor $cloudAnchorId created.")
                 userMessageText.text = getString(R.string.hosting_success)
                 debugText.text = getString(R.string.debug_hosting_success, cloudAnchorId)
+                getDeviceLocation()
                 saveAnchorWithNickname()
             }
         }
 
         /** Callback function invoked when the user presses the OK button in the Save Anchor Dialog.  */
         private fun onAnchorNameEntered(anchorNickname: String) {
+            getDeviceLocation()
             cloudAnchorId?.let { anchorId ->
-                saveAnchorToFirebase(anchorId, anchorNickname)
+                saveAnchorToFirebase(anchorId, anchorNickname, lastKnownLocation?.latitude, lastKnownLocation?.longitude)
             }
             val intent = Intent(this@CloudAnchorActivity, MainLobbyActivity::class.java)
             startActivity(intent)
@@ -710,6 +785,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
             if (cloudAnchorId == null) {
                 return
             }
+            getDeviceLocation()
             val hostDialogFragment = HostDialogFragment()
             // Supply num input as an argument.
             val args = Bundle()

@@ -23,12 +23,14 @@ fun processVideoPathByName(videoName: String, onSuccessCallback: (String?) -> Un
 }
 
 // onSuccessCallback processes an in-storage-path of this video
-fun saveAnchorToFirebase(anchorId: String, anchorName: String) {
+fun saveAnchorToFirebase(anchorId: String, anchorName: String, latitude: Double?, longitude: Double?) {
     val document = mapOf(
             "id" to anchorId,
             "name" to anchorName,
             "video_name" to "",
-            "scaling_factor" to 1.0
+            "scaling_factor" to 1.0,
+            "latitude" to latitude,
+            "longitude" to longitude
     )
     Firebase.firestore
             .collection("AnchorBindings")
