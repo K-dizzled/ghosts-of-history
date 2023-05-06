@@ -1,28 +1,34 @@
 package com.ghosts.of.history.persistentcloudanchor
 
+import android.os.Bundle
+import android.text.TextUtils
+import android.view.View
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.ghosts.of.history.R
+import com.ghosts.of.history.databinding.ActivityMapsBinding
 import android.annotation.SuppressLint
 import android.location.Location
-import com.ghosts.of.history.R
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.location.LocationServices
 
-
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private var map: GoogleMap? = null
     private var cameraPosition: CameraPosition? = null
 
@@ -57,6 +63,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment?.getMapAsync(this)
     }
 
+    fun addMarkers() {
+        val sydney = LatLng(-34.0, 151.0)
+        var marker = map?.addMarker(MarkerOptions().position(sydney).title("Жопа Андрея").snippet("Сюда лучше не соваться"))
+        marker?.tag = false
+    }
+
     /**
      * Saves the state of the map when the activity is paused.
      */
@@ -70,6 +82,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
+        
+        // Add a marker in Sydney and move the camera
+        addMarkers()
+        map?.setOnInfoWindowClickListener(InfoWindowActivity())
+        map?.setOnMarkerClickListener(this)
+        map?.setInfoWindowAdapter(InfoWindowAdapter())
 
         // Prompt the user for permission.
         getLocationPermission()
@@ -188,4 +206,51 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // Used for selecting the current place.
         private const val M_MAX_ENTRIES = 5
     }
+
+    /** Called when the user clicks a marker.  */
+    override fun onMarkerClick(marker: Marker): Boolean {
+        return false
+    }
+
+    internal inner class InfoWindowAdapter : GoogleMap.InfoWindowAdapter {
+        var mWindow: View = layoutInflater.inflate(R.layout.info_window, null)
+
+        private fun setInfoWindowText(marker: Marker) {
+            val tvTitle = mWindow.findViewById<TextView>(R.id.tvTitle)
+            if (marker.tag == false) {
+                tvTitle.text = marker.title
+                marker.tag = true
+            } else if (marker.tag == true){
+                tvTitle.text = marker.snippet
+                marker.tag = false
+            }
+        }
+
+        override fun getInfoWindow(arg0: Marker): View? {
+            setInfoWindowText(arg0)
+            return mWindow
+        }
+
+        override fun getInfoContents(arg0: Marker): View? {
+            setInfoWindowText(arg0)
+            return mWindow
+        }
+    }
+    internal inner class InfoWindowActivity : AppCompatActivity(),
+            GoogleMap.OnInfoWindowClickListener,
+            OnMapReadyCallback {
+        override fun onMapReady(googleMap: GoogleMap) {
+            // Add markers to the map and do other map setup.
+            // ...
+            // Set a listener for info window events0.
+            googleMap.setOnInfoWindowClickListener(this)
+        }
+
+        override fun onInfoWindowClick(marker: Marker) {
+            marker.showInfoWindow()
+            println("Info Window Clicked")
+        }
+    }
+
+
 }
