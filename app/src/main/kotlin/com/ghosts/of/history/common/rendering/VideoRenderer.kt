@@ -3,6 +3,7 @@ package com.ghosts.of.history.common.rendering
 import android.content.Context
 import android.graphics.SurfaceTexture
 import android.graphics.SurfaceTexture.OnFrameAvailableListener
+import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
@@ -12,6 +13,7 @@ import android.view.Surface
 import com.ghosts.of.history.common.rendering.ShaderUtil.checkGLError
 import java.io.File
 import java.io.IOException
+import java.lang.Float.max
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -27,9 +29,14 @@ class VideoRenderer {
     private var mQuadPositionParam = 0
     private var mQuadTexCoordParam = 0
     private var mModelViewProjectionUniform = 0
+    private var texSizeUniform = 0
+    private var QUAD_COORDS = floatArrayOf(
+            -1.0f, +1.0f, 0.0f,  // top left
+            -1.0f, -1.0f, 0.0f,  // bottom left
+            +1.0f, -1.0f, 0.0f,  // bottom right
+            +1.0f, +1.0f, 0.0f) // top right
 
     fun createOnGlThread(context: Context) {
-        createQuardCoord()
         val vertexShader = ShaderUtil.loadGLShader(
                 tag = TAG,
                 context = context,
@@ -50,6 +57,7 @@ class VideoRenderer {
         mQuadTexCoordParam = GLES20.glGetAttribLocation(mQuadProgram, "a_TexCoord")
         mModelViewProjectionUniform =
                 GLES20.glGetUniformLocation(mQuadProgram, "u_ModelViewProjection")
+        texSizeUniform = GLES20.glGetUniformLocation(mQuadProgram, "texSize")
         checkGLError(TAG, "Program parameters")
     }
 
@@ -77,8 +85,12 @@ class VideoRenderer {
         GLES20.glEnable(GL10.GL_BLEND)
         GLES20.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, player.mTextureId)
+        println("HW: ${player.videoWidth} ${player.videoHeight}")
+        GLES20.glUniform2f(texSizeUniform, player.videoWidth, player.videoHeight)
         GLES20.glUseProgram(mQuadProgram)
 
+        updateQuardCoord(player.videoWidth, player.videoHeight)
+        println("new QuadCoord: ${QUAD_COORDS.contentToString()}")
 
         // Set the vertex positions.
         GLES20.glVertexAttribPointer(
@@ -131,7 +143,18 @@ class VideoRenderer {
     }
 
     // Make a quad to hold the movie
-    private fun createQuardCoord() {
+    private fun updateQuardCoord(width: Float, height: Float) {
+        val normalizedWidth = width / max(width, height)
+        val normalizedHeight = height / max(width, height)
+
+        // Calculate the quad vertex positions
+        QUAD_COORDS = floatArrayOf(
+                -normalizedWidth / 2.0f, 0.0f, 0.0f,
+                -normalizedWidth / 2.0f, normalizedHeight, 0.0f,
+                normalizedWidth / 2.0f, 0.0f, 0.0f,
+                normalizedWidth / 2.0f, normalizedHeight, 0.0f
+        )
+
         val bbVertices = ByteBuffer.allocateDirect(QUAD_COORDS.size * FLOAT_SIZE)
         bbVertices.order(ByteOrder.nativeOrder())
         mQuadVertices = bbVertices.asFloatBuffer()
@@ -164,11 +187,11 @@ class VideoRenderer {
         private const val COORDS_PER_VERTEX = 3
         private const val VERTEX_SHADER_NAME = "shaders/video.vert"
         private const val FRAGMENT_SHADER_NAME = "shaders/video.frag"
-        private val QUAD_COORDS = floatArrayOf(
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 3.0f, 0.0f,
-                +1.0f, 0.0f, 0.0f,
-                +1.0f, 3.0f, 0.0f)
+//        private val QUAD_COORDS = floatArrayOf(
+//                -1.0f, 0.0f, 0.0f,
+//                -1.0f, 3.0f, 0.0f,
+//                +1.0f, 0.0f, 0.0f,
+//                +1.0f, 3.0f, 0.0f)
         private val QUAD_TEXCOORDS = floatArrayOf(
                 0.0f, 0.0f,
                 0.0f, 1.0f,
@@ -196,6 +219,10 @@ class VideoPlayer : OnFrameAvailableListener {
     val VIDEO_QUAD_TEXTCOORDS_TRANSFORMED =
             floatArrayOf(0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f)
     val lock = Object()
+    var videoWidth = 0.0f
+        private set
+    var videoHeight = 0.0f
+        private set
 
     fun initialize() {
         val textures = IntArray(1)
@@ -226,6 +253,16 @@ class VideoPlayer : OnFrameAvailableListener {
         player.setOnCompletionListener { done = true }
         player.setOnInfoListener { _: MediaPlayer?, _: Int, _: Int -> false }
         try {
+            // get video mp4 resolution
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(file.absolutePath)
+            val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+            val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+            videoWidth = width!!.toFloat()
+            videoHeight = height!!.toFloat()
+            println("videoWidth: $videoWidth, videoHeight: $videoHeight")
+            retriever.release()
+
             player.setDataSource(file.inputStream().fd)
             player.isLooping = true
             synchronized(lock) { isStarted = true }
