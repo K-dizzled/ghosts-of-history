@@ -27,6 +27,7 @@ android {
     }
     namespace 'com.ghosts.of.history'
     buildFeatures {
+        dataBinding = true
         viewBinding true
     }
 }
@@ -54,5 +55,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics-ktx:21.2.0'
     implementation 'com.google.firebase:firebase-firestore-ktx:24.4.2'
     implementation 'com.google.firebase:firebase-storage-ktx:20.1.0'
-    implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
 }

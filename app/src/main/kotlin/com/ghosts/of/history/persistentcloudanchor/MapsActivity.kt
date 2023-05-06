@@ -12,6 +12,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.ghosts.of.history.databinding.ActivityMapsBinding
 
+
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
@@ -20,7 +21,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_maps)
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
