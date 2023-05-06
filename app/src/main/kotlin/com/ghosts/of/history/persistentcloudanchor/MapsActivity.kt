@@ -13,6 +13,7 @@ import android.Manifest
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.app.ActivityCompat
@@ -28,9 +29,11 @@ import com.google.android.gms.maps.model.MarkerOptions
 
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import com.ghosts.of.history.utils.AnchorData
 import com.ghosts.of.history.utils.MarkerStorage
+import com.ghosts.of.history.utils.fetchImageFromStorage
 import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
@@ -38,6 +41,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.material.button.MaterialButton
+import java.io.File
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private var map: GoogleMap? = null
@@ -55,6 +59,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     // location retrieved by the Fused Location Provider.
     private var lastKnownLocation: Location? = null
     private lateinit var popUpDialog: Dialog
+
+    private var markersData: HashMap<String, AnchorData> = HashMap()
+    private var anchorImages: HashMap<String, File> = HashMap()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,8 +104,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             val marker = map?.addMarker(MarkerOptions()
                     .position(markerPosition ?: LatLng(0.0, 0.0))
                     .title(anchor.name)
-                    .snippet(anchor.description ?: "Default description")
+                    .snippet(anchor.anchorId)
                     .icon(BitmapDescriptorFactory.defaultMarker(color)))
+
+            markersData[anchor.anchorId] = anchor
+
+            anchor.imageName?.let { imageUrl ->
+                fetchImageFromStorage(imageUrl, applicationContext) {
+                    anchorImages[anchor.anchorId] = it
+                }
+            }
+
             marker?.tag = false
         }
     }
@@ -238,16 +254,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
 
         // Keys for storing activity state.
-        // [START maps_current_place_state_keys]
         private const val KEY_CAMERA_POSITION = "camera_position"
         private const val KEY_LOCATION = "location"
-        // [END maps_current_place_state_keys]
 
         // Used for selecting the current place.
         private const val M_MAX_ENTRIES = 5
     }
 
-    private fun showPopup(label: String, description: String) {
+    private fun showPopup(label: String, description: String, anchorId: String?) {
         popUpDialog.setContentView(R.layout.activity_marker_popup)
 
         val popUpClose = popUpDialog.findViewById<View>(R.id.txtclose) as TextView
@@ -259,16 +273,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val popUpDescription = popUpDialog.findViewById<View>(R.id.description) as TextView
         popUpDescription.text = description
 
+        val loadedImage = anchorImages[anchorId]
+        if (loadedImage != null) {
+            val popUpImage = popUpDialog.findViewById(R.id.popImage) as ImageView
+            val bitmap = BitmapFactory.decodeFile(loadedImage.absolutePath)
+            popUpImage.setImageBitmap(bitmap)
+        }
+
+
         popUpDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popUpDialog.show()
     }
 
     /** Called when the user clicks a marker.  */
     override fun onMarkerClick(marker: Marker): Boolean {
+        val anchorData: AnchorData? = markersData[marker.snippet]
+        val description = anchorData?.description
+        val imageUrl = anchorData?.imageName
+
         showPopup(
                 marker.title ?: "No title",
-                marker.snippet ?: "No description"
+                description ?: "No description",
+                marker.snippet
         )
+
         return true
     }
 
