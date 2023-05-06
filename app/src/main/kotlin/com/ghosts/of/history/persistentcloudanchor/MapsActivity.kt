@@ -26,10 +26,13 @@ import com.google.android.gms.maps.model.MarkerOptions
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.ghosts.of.history.utils.AnchorData
+import com.ghosts.of.history.utils.MarkerStorage
 import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.material.button.MaterialButton
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
@@ -76,19 +79,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
-    fun addMarkers(anchors: List<AnchorData>) {
+    fun addMarkers(anchors: List<AnchorData>, markerStorage: MarkerStorage) {
         for(anchor in anchors) {
+            val color = if (markerStorage.hasMarker(anchor.anchorId)) {
+                BitmapDescriptorFactory.HUE_GREEN
+            } else {
+                BitmapDescriptorFactory.HUE_RED
+            }
             val markerPosition = anchor.geoPosition?.let { LatLng(it.latitude, anchor.geoPosition.longitude) }
             val marker = map?.addMarker(MarkerOptions()
                     .position(markerPosition ?: LatLng(0.0, 0.0))
                     .title(anchor.name)
-                    .snippet(anchor.description ?: "Default description"))
+                    .snippet(anchor.description ?: "Default description")
+                    .icon(BitmapDescriptorFactory.defaultMarker(color)))
             marker?.tag = false
         }
     }
 
     fun handleMarkers(anchors: List<AnchorData>) {
-        addMarkers(anchors)
+        val marketStorage = MarkerStorage(applicationContext)
+        addMarkers(anchors, marketStorage)
     }
 
     /**
