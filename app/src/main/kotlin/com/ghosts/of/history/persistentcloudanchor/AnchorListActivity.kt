@@ -9,6 +9,7 @@ import com.ghosts.of.history.R
 import com.ghosts.of.history.common.models.ItemAdapter
 import com.ghosts.of.history.common.models.ItemModel
 import com.ghosts.of.history.databinding.ActivityAnchorListBinding
+import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
 import kotlinx.coroutines.*
 
 class AnchorListActivity : AppCompatActivity() {
@@ -39,13 +40,18 @@ class AnchorListActivity : AppCompatActivity() {
     }
 
     private suspend fun fetchItems(): List<ItemModel> = withContext(Dispatchers.IO) {
-        // Fetch items from network here.
-        // This is just a placeholder.
-        val items = ArrayList<ItemModel>()
-        for (i in 1..100) {
-            items.add(ItemModel("$i", "Name $i", "Description $i", "https://example.com/image/$i"))
+        val anchorsData = getAnchorsDataFromFirebase()
+
+        anchorsData.map {
+            ItemModel(
+                    it.anchorId,
+                    it.name,
+                    it.description ?: "No description",
+                    it.imageName,
+                    uiScope,
+                    getApplicationContext()
+            )
         }
-        return@withContext items
     }
 
     override fun onDestroy() {

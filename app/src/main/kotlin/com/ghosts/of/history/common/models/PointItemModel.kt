@@ -1,5 +1,7 @@
 package com.ghosts.of.history.common.models
 
+import android.content.Context
+import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,12 +9,18 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.ghosts.of.history.R
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.lifecycleScope
+import com.ghosts.of.history.utils.fetchImageFromStorage
+import kotlinx.coroutines.launch
 
 data class ItemModel(
     val id: String,
     val name: String,
     val description: String,
-    val imageUrl: String
+    val imageUrl: String?,
+    val scope: CoroutineScope,
+    val context: Context
 )
 
 class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
@@ -33,7 +41,13 @@ class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<
         val item = itemList[position]
         holder.titleView.text = item.name
         holder.descriptionView.text = item.description
-        // holder.imageView.setImageResource(...)
+        item.scope.launch {
+            item.imageUrl?.let {imgUrl ->
+                val image = fetchImageFromStorage(imgUrl, item.context).getOrElse { return@let }
+                val bitmap = BitmapFactory.decodeFile(image.absolutePath)
+                holder.imageView.setImageBitmap(bitmap)
+            }
+        }
     }
 
     override fun getItemCount() = itemList.size
