@@ -30,6 +30,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import com.ghosts.of.history.utils.AnchorData
 import com.ghosts.of.history.utils.MarkerStorage
