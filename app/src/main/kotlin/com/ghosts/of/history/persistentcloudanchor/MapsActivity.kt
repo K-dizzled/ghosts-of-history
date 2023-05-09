@@ -108,7 +108,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 markersData[anchor.anchorId] = anchor
 
                 anchor.imageName?.let { imageUrl ->
-                    anchorImages[anchor.anchorId] = fetchImageFromStorage(imageUrl, applicationContext)
+                    anchorImages[anchor.anchorId] = fetchImageFromStorage(imageUrl, applicationContext).getOrElse {
+                        println("Error fetching image from storage: $it")
+                        throw it
+                    }
                 }
 
                 marker?.tag = false

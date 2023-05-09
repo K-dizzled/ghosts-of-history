@@ -63,6 +63,7 @@ import androidx.lifecycle.lifecycleScope
 
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * Main Activity for the Persistent Cloud Anchor Sample.
@@ -494,9 +495,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                                 .compose(Pose.makeRotation(0.0f, 0.707f, 0.0f, 0.707f)) // rotate 90 degrees around OY
                         cameraFacingPose.toMatrix(anchorMatrix, 0)
                         // Update and draw the model and its shadow.
-                        lifecycleScope.launch {
-                            drawAnchor(resolvedAnchor, anchorMatrix, colorCorrectionRgba)
-                        }
+                        drawAnchor(resolvedAnchor, anchorMatrix, colorCorrectionRgba)
                     }
                 }
                 val closestAnchor = resolvedAnchors.filter { anchor ->
@@ -532,9 +531,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                         anchorPose = anchor.pose
                         anchorPose.toMatrix(anchorMatrix, 0)
                         anchorPose.getTranslation(anchorTranslation, 0)
-                        lifecycleScope.launch {
-                            drawAnchor(anchor, anchorMatrix, colorCorrectionRgba)
-                        }
+                        drawAnchor(anchor, anchorMatrix, colorCorrectionRgba)
                         if (!hostedAnchor) {
                             shouldDrawFeatureMapQualityUi = true
                         }
@@ -636,7 +633,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         featureMapQualityUi.drawUi(anchorPose, viewMatrix, projectionMatrix, colorCorrectionRgba)
     }
 
-    private suspend fun drawAnchor(anchor: Anchor,
+    private fun drawAnchor(anchor: Anchor,
                            anchorMatrix: FloatArray,
                            colorCorrectionRgba: FloatArray) {
         if (currentMode == HostResolveMode.HOSTING) {
@@ -645,10 +642,19 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         } else {
             val videoPlayer = videoPlayers[anchor.cloudAnchorId] ?: return
             val anchorData = checkNotNull(anchorIdToAnchorData[anchor.cloudAnchorId])
-            if (!videoPlayer.isFetching) {
-                synchronized(videoPlayer.lock) { videoPlayer.isFetching = true }
+
+            var shouldFetch = false
+            synchronized(videoPlayer.lock) {
+                if (!videoPlayer.isFetching) {
+                    videoPlayer.isFetching = true
+                    shouldFetch = true
+                }
+            }
+            if (shouldFetch) {
                 val videoName = anchorData.videoName
-                videoPlayer.play(fetchVideoFromStorage(videoName, this))
+                lifecycleScope.launch {
+                    videoPlayer.play(fetchVideoFromStorage(videoName, this@CloudAnchorActivity).getOrThrow())
+                }
             }
             videoPlayer.update(anchorMatrix, anchorData.scalingFactor)
             videoRenderer.draw(videoPlayer, viewMatrix, projectionMatrix)

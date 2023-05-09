@@ -210,6 +210,7 @@ class VideoPlayer : OnFrameAvailableListener {
         private set
     var prepared = false
         private set
+    @Volatile
     var isFetching = false
     var isStarted = false
         private set
