@@ -11,6 +11,8 @@ import android.opengl.Matrix
 import android.util.Log
 import android.view.Surface
 import com.ghosts.of.history.common.rendering.ShaderUtil.checkGLError
+import com.ghosts.of.history.utils.Color
+import com.ghosts.of.history.utils.VideoParams
 import java.io.File
 import java.io.IOException
 import java.lang.Float.max
@@ -30,6 +32,8 @@ class VideoRenderer {
     private var mQuadTexCoordParam = 0
     private var mModelViewProjectionUniform = 0
     private var texSizeUniform = 0
+    private var greenScreenColorUniform = 0
+    private var chromakeyThresholdUniform = 0
     private var QUAD_COORDS = floatArrayOf(
             -1.0f, +1.0f, 0.0f,  // top left
             -1.0f, -1.0f, 0.0f,  // bottom left
@@ -58,6 +62,8 @@ class VideoRenderer {
         mModelViewProjectionUniform =
                 GLES20.glGetUniformLocation(mQuadProgram, "u_ModelViewProjection")
         texSizeUniform = GLES20.glGetUniformLocation(mQuadProgram, "texSize")
+        greenScreenColorUniform = GLES20.glGetUniformLocation(mQuadProgram, "keyColor")
+        chromakeyThresholdUniform = GLES20.glGetUniformLocation(mQuadProgram, "threshold")
         checkGLError(TAG, "Program parameters")
     }
 
@@ -87,6 +93,13 @@ class VideoRenderer {
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, player.mTextureId)
         println("HW: ${player.videoWidth} ${player.videoHeight}")
         GLES20.glUniform2f(texSizeUniform, player.videoWidth, player.videoHeight)
+        GLES20.glUniform3f(
+                greenScreenColorUniform,
+                player.videoParams.greenScreenColor.red,
+                player.videoParams.greenScreenColor.green,
+                player.videoParams.greenScreenColor.blue)
+        GLES20.glUniform1f(chromakeyThresholdUniform, player.videoParams.chromakeyThreshold)
+
         GLES20.glUseProgram(mQuadProgram)
 
         updateQuardCoord(player.videoWidth, player.videoHeight)
@@ -224,6 +237,7 @@ class VideoPlayer : OnFrameAvailableListener {
         private set
     var videoHeight = 0.0f
         private set
+    var videoParams = VideoParams(Color(0.0f, 1.0f, 0.0f), 0.7f)
 
     fun initialize() {
         val textures = IntArray(1)
@@ -241,7 +255,8 @@ class VideoPlayer : OnFrameAvailableListener {
         initialized = true
     }
 
-    fun play(file: File): Boolean {
+    fun play(file: File, videoParams: VideoParams): Boolean {
+        this.videoParams = videoParams
         player.reset()
         done = false
         player.setOnPreparedListener {

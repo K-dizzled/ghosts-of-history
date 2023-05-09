@@ -60,6 +60,8 @@ import android.location.Location
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
+import com.ghosts.of.history.utils.Color
+import com.ghosts.of.history.utils.VideoParams
 
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
@@ -652,8 +654,9 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
             }
             if (shouldFetch) {
                 val videoName = anchorData.videoName
+                val videoParams = anchorData.videoParams ?: VideoParams(DEFAULT_GREENSCREEN_COLOR, DEFAULT_CHROMAKEY_THRESHOLD)
                 lifecycleScope.launch {
-                    videoPlayer.play(fetchVideoFromStorage(videoName, this@CloudAnchorActivity).getOrThrow())
+                    videoPlayer.play(fetchVideoFromStorage(videoName, this@CloudAnchorActivity).getOrThrow(), videoParams)
                 }
             }
             videoPlayer.update(anchorMatrix, anchorData.scalingFactor)
@@ -697,7 +700,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         createSession()
         val resolveListener = ResolveListener()
         lifecycleScope.launch {
-            val anchorsData = getAnchorsDataFromFirebase()
+            val anchorsData = getAnchorsDataFromFirebase().filter { it.enabled }
             synchronized(anchorLock) {
                 unresolvedAnchorIds = anchorsData.map { it.anchorId }.toMutableList()
                 anchorIdToAnchorData = anchorsData.associateBy { it.anchorId }
@@ -807,6 +810,9 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         private const val MIN_DISTANCE = 0.2
         private const val MAX_DISTANCE = 10.0
         private const val DISAPPEAR_DISTANCE =55.0
+        private val DEFAULT_GREENSCREEN_COLOR = Color(0.0f, 1.0f, 0.0f)
+        private const val DEFAULT_CHROMAKEY_THRESHOLD = 0.7f
+
         fun newHostingIntent(packageContext: Context?): Intent {
             val intent = Intent(packageContext, CloudAnchorActivity::class.java)
             intent.putExtra(EXTRA_HOSTING_MODE, true)

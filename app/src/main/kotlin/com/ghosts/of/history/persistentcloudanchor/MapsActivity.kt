@@ -140,7 +140,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         lifecycleScope.launch {
             // Add a marker in Sydney and move the camera
-            handleMarkers(getAnchorsDataFromFirebase())
+            handleMarkers(getAnchorsDataFromFirebase().filter{ it.enabled })
             map?.setOnInfoWindowClickListener(InfoWindowActivity())
             map?.setOnMarkerClickListener(this@MapsActivity)
             map?.setInfoWindowAdapter(InfoWindowAdapter())

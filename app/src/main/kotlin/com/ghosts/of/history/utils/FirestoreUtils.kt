@@ -48,6 +48,12 @@ suspend fun saveAnchorToFirebase(anchorId: String, anchorName: String, latitude:
 }
 
 suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
+    val videoParams = anchor.videoParams?.let {
+        arrayOf(it.greenScreenColor.red,
+                it.greenScreenColor.green,
+                it.greenScreenColor.blue,
+                it.chromakeyThreshold)
+    }
     val document = mapOf(
             "id" to anchor.anchorId,
             "name" to anchor.name,
@@ -55,7 +61,8 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
             "enabled" to anchor.enabled,
             "scaling_factor" to anchor.scalingFactor,
             "latitude" to anchor.geoPosition?.latitude,
-            "longitude" to anchor.geoPosition?.longitude
+            "longitude" to anchor.geoPosition?.longitude,
+            "video_params" to videoParams,
     )
     Firebase.firestore.collection("AnchorBindings").document().set(document).await()
 }
@@ -64,6 +71,16 @@ suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.
     val latitude = it.get("latitude")
     val longitude = it.get("longitude")
     val enabled = it.get("enabled") as Boolean? ?: false
+    val videoParams = it.get("video_params")?.let {e ->
+        VideoParams(
+                Color(
+                        (e as Array<*>)[0] as Float,
+                        e[1] as Float,
+                        e[2] as Float
+                ),
+                e[3] as Float
+        )
+    }
     println(it.get("description"))
     AnchorData(
             it.get("id") as String,
@@ -77,11 +94,14 @@ suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.
                 GeoPosition((latitude as Number).toDouble(), (longitude as Number).toDouble())
             } else {
                 null
-            })
+            },
+            videoParams
+    )
 }
 
 data class GeoPosition(val latitude: Double, val longitude: Double)
-
+data class Color(val red: Float, val green: Float, val blue: Float)
+data class VideoParams(val greenScreenColor: Color, val chromakeyThreshold: Float)
 data class AnchorData(val anchorId: String,
                       val name: String,
                       val description: String?,
@@ -89,7 +109,8 @@ data class AnchorData(val anchorId: String,
                       val videoName: String,
                       val enabled: Boolean,
                       val scalingFactor: Float,
-                      val geoPosition: GeoPosition?)
+                      val geoPosition: GeoPosition?,
+                      val videoParams: VideoParams? = null)
 
 //// onSuccessCallback processes just a video name
 //suspend fun processAnchorDescription(anchorId: String): String? {

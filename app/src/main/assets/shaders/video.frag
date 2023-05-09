@@ -4,6 +4,8 @@ precision mediump float;
 varying vec2 v_TexCoord;
 uniform samplerExternalOES sTexture;
 uniform vec2 texSize;
+uniform vec3 keyColor;
+uniform float threshold;
 
 //bool isBackground(vec3 color) {
 //    float red = 1.0;
@@ -16,8 +18,8 @@ uniform vec2 texSize;
 //    return false;
 //}
 
-const vec3 keyColor = vec3(0.0, 1.0, 0.0); // Green screen color
-const float threshold = 0.7; // Threshold to determine the range of colors to consider transparent
+//const vec3 keyColor = vec3(0.0, 1.0, 0.0); // Green screen color
+//const float threshold = 0.7; // Threshold to determine the range of colors to consider transparent
 const float smoothness = 0.05; // Controls the smoothness of the edges
 
 
