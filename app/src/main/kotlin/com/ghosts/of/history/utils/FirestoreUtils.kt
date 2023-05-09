@@ -23,12 +23,14 @@ fun processVideoPathByName(videoName: String, onSuccessCallback: (String?) -> Un
 }
 
 // onSuccessCallback processes an in-storage-path of this video
-fun saveAnchorToFirebase(anchorId: String, anchorName: String) {
+fun saveAnchorToFirebase(anchorId: String, anchorName: String, latitude: Double?, longitude: Double?) {
     val document = mapOf(
             "id" to anchorId,
             "name" to anchorName,
             "video_name" to "",
-            "scaling_factor" to 1.0
+            "scaling_factor" to 1.0,
+            "latitude" to latitude,
+            "longitude" to longitude
     )
     Firebase.firestore
             .collection("AnchorBindings")
@@ -50,6 +52,7 @@ fun getAnchorsDataFromFirebase(onSuccessCallback: (List<AnchorData>) -> Unit) {
                             it.get("id") as String,
                             it.get("name") as String,
                             it.get("description") as String?,
+                            it.get("image_name") as String?,
                             it.get("video_name") as String,
                             (it.get("scaling_factor") as Number).toFloat(),
                             if (latitude != null && longitude != null) {
@@ -64,7 +67,7 @@ fun getAnchorsDataFromFirebase(onSuccessCallback: (List<AnchorData>) -> Unit) {
 
 data class GeoPosition(val latitude: Double, val longitude: Double)
 
-data class AnchorData(val anchorId: String, val name: String, val description: String?, val videoName: String, val scalingFactor: Float,
+data class AnchorData(val anchorId: String, val name: String, val description: String?, val imageName: String?, val videoName: String, val scalingFactor: Float,
                         val geoPosition: GeoPosition?)
 
 // onSuccessCallback processes just a video name
@@ -83,6 +86,23 @@ fun processAnchorSets(setName: String, onSuccessCallback: (Array<String>?) -> Un
 }
 
 fun fetchVideoFromStorage(path: String, context: Context, onSuccessCallback: (File) -> Unit) {
+    Firebase.storage.reference.child(path).downloadUrl.addOnSuccessListener {
+        CoroutineScope(Dispatchers.IO).launch {
+            val url = URL(it.toString())
+            val connection = url.openConnection()
+            connection.connect()
+            val stream = connection.getInputStream()
+            val randomFilename = UUID.randomUUID().toString() + File(path).name
+            val downloadingMediaFile = File(context.cacheDir, randomFilename)
+
+            val out = FileOutputStream(downloadingMediaFile)
+            stream.copyTo(out)
+            onSuccessCallback(downloadingMediaFile)
+        }
+    }
+}
+
+fun fetchImageFromStorage(path: String, context: Context, onSuccessCallback: (File) -> Unit) {
     Firebase.storage.reference.child(path).downloadUrl.addOnSuccessListener {
         CoroutineScope(Dispatchers.IO).launch {
             val url = URL(it.toString())
