@@ -1,12 +1,10 @@
 package com.ghosts.of.history.persistentcloudanchor
 
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.ghosts.of.history.R
-import com.ghosts.of.history.databinding.ActivityMapsBinding
 import android.annotation.SuppressLint
 import android.location.Location
 import android.Manifest
@@ -20,7 +18,6 @@ import androidx.core.app.ActivityCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
@@ -28,20 +25,19 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
 import android.util.Log
-import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.ghosts.of.history.utils.AnchorData
-import com.ghosts.of.history.utils.MarkerStorage
+import com.ghosts.of.history.utils.VisitedMarkersStorage
 import com.ghosts.of.history.utils.fetchImageFromStorage
 import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.launch
 import java.io.File
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
@@ -94,34 +90,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
-    fun addMarkers(anchors: List<AnchorData>, markerStorage: MarkerStorage) {
-        for(anchor in anchors) {
-            val color = if (markerStorage.hasMarker(anchor.anchorId)) {
-                BitmapDescriptorFactory.HUE_GREEN
-            } else {
-                BitmapDescriptorFactory.HUE_RED
-            }
-            val markerPosition = anchor.geoPosition?.let { LatLng(it.latitude, anchor.geoPosition.longitude) }
-            val marker = map?.addMarker(MarkerOptions()
-                    .position(markerPosition ?: LatLng(0.0, 0.0))
-                    .title(anchor.name)
-                    .snippet(anchor.anchorId)
-                    .icon(BitmapDescriptorFactory.defaultMarker(color)))
-
-            markersData[anchor.anchorId] = anchor
-
-            anchor.imageName?.let { imageUrl ->
-                fetchImageFromStorage(imageUrl, applicationContext) {
-                    anchorImages[anchor.anchorId] = it
+    fun addMarkers(anchors: List<AnchorData>, markerStorage: VisitedMarkersStorage) {
+        lifecycleScope.launch {
+            for (anchor in anchors) {
+                val color = if (markerStorage.hasMarker(anchor.anchorId)) {
+                    BitmapDescriptorFactory.HUE_GREEN
+                } else {
+                    BitmapDescriptorFactory.HUE_RED
                 }
-            }
+                val markerPosition = anchor.geoPosition?.let { LatLng(it.latitude, anchor.geoPosition.longitude) }
+                val marker = map?.addMarker(MarkerOptions()
+                        .position(markerPosition ?: LatLng(0.0, 0.0))
+                        .title(anchor.name)
+                        .snippet(anchor.anchorId)
+                        .icon(BitmapDescriptorFactory.defaultMarker(color)))
 
-            marker?.tag = false
+                markersData[anchor.anchorId] = anchor
+
+                anchor.imageName?.let { imageUrl ->
+                    anchorImages[anchor.anchorId] = fetchImageFromStorage(imageUrl, applicationContext)
+                }
+
+                marker?.tag = false
+            }
         }
     }
 
-    fun handleMarkers(anchors: List<AnchorData>) {
-        val marketStorage = MarkerStorage(applicationContext)
+    suspend fun handleMarkers(anchors: List<AnchorData>) {
+        val marketStorage = VisitedMarkersStorage(applicationContext)
         addMarkers(anchors, marketStorage)
     }
 
@@ -138,22 +134,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        
-        // Add a marker in Sydney and move the camera
-        getAnchorsDataFromFirebase(::handleMarkers)
-        map?.setOnInfoWindowClickListener(InfoWindowActivity())
-        map?.setOnMarkerClickListener(this)
-        map?.setInfoWindowAdapter(InfoWindowAdapter())
 
-        // Prompt the user for permission.
-        getLocationPermission()
-        // [END_EXCLUDE]
+        lifecycleScope.launch {
+            // Add a marker in Sydney and move the camera
+            handleMarkers(getAnchorsDataFromFirebase())
+            map?.setOnInfoWindowClickListener(InfoWindowActivity())
+            map?.setOnMarkerClickListener(this@MapsActivity)
+            map?.setInfoWindowAdapter(InfoWindowAdapter())
 
-        // Turn on the My Location layer and the related control on the map.
-        updateLocationUI()
+            // Prompt the user for permission.
+            getLocationPermission()
 
-        // Get the current location of the device and set the position of the map.
-        getDeviceLocation()
+            // Turn on the My Location layer and the related control on the map.
+            updateLocationUI()
+
+            // Get the current location of the device and set the position of the map.
+            getDeviceLocation()
+        }
     }
 
     /**

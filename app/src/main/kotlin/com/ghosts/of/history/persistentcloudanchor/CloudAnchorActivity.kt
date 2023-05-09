@@ -54,30 +54,15 @@ import java.io.IOException
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.hypot
-import android.text.TextUtils
 import android.view.View
-import com.ghosts.of.history.databinding.ActivityMapsBinding
 import android.annotation.SuppressLint
 import android.location.Location
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
-
-import com.ghosts.of.history.utils.MarkerStorage
-import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.launch
 
 /**
  * Main Activity for the Persistent Cloud Anchor Sample.
@@ -509,7 +494,9 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                                 .compose(Pose.makeRotation(0.0f, 0.707f, 0.0f, 0.707f)) // rotate 90 degrees around OY
                         cameraFacingPose.toMatrix(anchorMatrix, 0)
                         // Update and draw the model and its shadow.
-                        drawAnchor(resolvedAnchor, anchorMatrix, colorCorrectionRgba)
+                        lifecycleScope.launch {
+                            drawAnchor(resolvedAnchor, anchorMatrix, colorCorrectionRgba)
+                        }
                     }
                 }
                 val closestAnchor = resolvedAnchors.filter { anchor ->
@@ -545,7 +532,9 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                         anchorPose = anchor.pose
                         anchorPose.toMatrix(anchorMatrix, 0)
                         anchorPose.getTranslation(anchorTranslation, 0)
-                        drawAnchor(anchor, anchorMatrix, colorCorrectionRgba)
+                        lifecycleScope.launch {
+                            drawAnchor(anchor, anchorMatrix, colorCorrectionRgba)
+                        }
                         if (!hostedAnchor) {
                             shouldDrawFeatureMapQualityUi = true
                         }
@@ -647,7 +636,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         featureMapQualityUi.drawUi(anchorPose, viewMatrix, projectionMatrix, colorCorrectionRgba)
     }
 
-    private fun drawAnchor(anchor: Anchor,
+    private suspend fun drawAnchor(anchor: Anchor,
                            anchorMatrix: FloatArray,
                            colorCorrectionRgba: FloatArray) {
         if (currentMode == HostResolveMode.HOSTING) {
@@ -659,9 +648,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
             if (!videoPlayer.isFetching) {
                 synchronized(videoPlayer.lock) { videoPlayer.isFetching = true }
                 val videoName = anchorData.videoName
-                fetchVideoFromStorage(videoName, this) {
-                    videoPlayer.play(it)
-                }
+                videoPlayer.play(fetchVideoFromStorage(videoName, this))
             }
             videoPlayer.update(anchorMatrix, anchorData.scalingFactor)
             videoRenderer.draw(videoPlayer, viewMatrix, projectionMatrix)
@@ -703,7 +690,8 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         }
         createSession()
         val resolveListener = ResolveListener()
-        getAnchorsDataFromFirebase { anchorsData ->
+        lifecycleScope.launch {
+            val anchorsData = getAnchorsDataFromFirebase()
             synchronized(anchorLock) {
                 unresolvedAnchorIds = anchorsData.map { it.anchorId }.toMutableList()
                 anchorIdToAnchorData = anchorsData.associateBy { it.anchorId }
@@ -773,9 +761,11 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
 
         /** Callback function invoked when the user presses the OK button in the Save Anchor Dialog.  */
         private fun onAnchorNameEntered(anchorNickname: String) {
-            getDeviceLocation()
-            cloudAnchorId?.let { anchorId ->
-                saveAnchorToFirebase(anchorId, anchorNickname, lastKnownLocation?.latitude, lastKnownLocation?.longitude)
+            lifecycleScope.launch {
+                getDeviceLocation()
+                cloudAnchorId?.let { anchorId ->
+                    saveAnchorToFirebase(anchorId, anchorNickname, lastKnownLocation?.latitude, lastKnownLocation?.longitude)
+                }
             }
             val intent = Intent(this@CloudAnchorActivity, MainLobbyActivity::class.java)
             startActivity(intent)
