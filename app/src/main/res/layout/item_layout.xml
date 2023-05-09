@@ -15,6 +15,8 @@
         android:layout_height="match_parent"
         android:layout_toEndOf="@id/itemImageView"
         android:layout_toRightOf="@id/itemImageView"
+        android:layout_toLeftOf="@+id/enable_button"
+        android:layout_toStartOf="@+id/enable_button"
         android:layout_marginStart="20dp">
 
         <TextView
@@ -32,10 +34,20 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:layout_below="@id/itemTitleView"
+            android:layout_marginRight="15dp"
             android:text="@string/large_text"
             android:ellipsize="end"
             android:maxLines="2"/>
-
     </RelativeLayout>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="5dp"
+        android:text="Enable"
+        android:layout_centerVertical="true"
+        android:id="@+id/enable_button"/>
 
 </RelativeLayout>

@@ -42,14 +42,11 @@ class AnchorListActivity : AppCompatActivity() {
     private suspend fun fetchItems(): List<ItemModel> = withContext(Dispatchers.IO) {
         val anchorsData = getAnchorsDataFromFirebase()
 
-        anchorsData.map {
+        anchorsData.map { anchorData ->
             ItemModel(
-                    it.anchorId,
-                    it.name,
-                    it.description ?: "No description",
-                    it.imageName,
+                    anchorData,
                     uiScope,
-                    getApplicationContext()
+                    applicationContext
             )
         }
     }
