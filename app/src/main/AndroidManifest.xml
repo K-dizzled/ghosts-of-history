@@ -23,7 +23,17 @@
         android:usesCleartextTraffic="false"
         android:name=".persistentcloudanchor.App"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity
+            android:name=".persistentcloudanchor.AnchorListActivity"
+            android:exported="true"
+            android:label="@string/title_activity_anchor_list"
+            android:theme="@style/AppTheme.NoActionBar">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
 
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+        </activity>
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 
@@ -43,22 +53,15 @@
             android:name=".persistentcloudanchor.MapsActivity"
             android:exported="true"
             android:label="@string/title_activity_maps">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-<!--        <activity-->
-<!--            android:name=".persistentcloudanchor.LoadingActivity"-->
-<!--            android:exported="true"-->
-<!--            android:label="Loading">-->
-<!--&lt;!&ndash;            <intent-filter>&ndash;&gt;-->
-<!--&lt;!&ndash;                <action android:name="android.intent.action.MAIN" />&ndash;&gt;-->
-
-<!--&lt;!&ndash;                <category android:name="android.intent.category.LAUNCHER" />&ndash;&gt;-->
-<!--&lt;!&ndash;            </intent-filter>&ndash;&gt;-->
-<!--        </activity>-->
+        </activity> <!-- <activity -->
+        <!-- android:name=".persistentcloudanchor.LoadingActivity" -->
+        <!-- android:exported="true" -->
+        <!-- android:label="Loading"> -->
+        <!-- &lt;!&ndash;            <intent-filter>&ndash;&gt; -->
+        <!-- &lt;!&ndash;                <action android:name="android.intent.action.MAIN" />&ndash;&gt; -->
+        <!-- &lt;!&ndash;                <category android:name="android.intent.category.LAUNCHER" />&ndash;&gt; -->
+        <!-- &lt;!&ndash;            </intent-filter>&ndash;&gt; -->
+        <!-- </activity> -->
         <activity
             android:name=".persistentcloudanchor.MainLobbyActivity"
             android:configChanges="orientation|screenSize"
