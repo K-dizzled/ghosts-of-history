@@ -3,7 +3,6 @@
 precision mediump float;
 varying vec2 v_TexCoord;
 uniform samplerExternalOES sTexture;
-uniform vec2 texSize;
 uniform vec3 keyColor;
 uniform float threshold;
 

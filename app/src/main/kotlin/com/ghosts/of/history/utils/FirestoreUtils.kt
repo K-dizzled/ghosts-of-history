@@ -71,14 +71,15 @@ suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.
     val latitude = it.get("latitude")
     val longitude = it.get("longitude")
     val enabled = it.get("enabled") as Boolean? ?: false
-    val videoParams = it.get("video_params")?.let {e ->
+    val videoParams = it.get("video_params")?. let { array ->
+        val arr = array as ArrayList<*>
         VideoParams(
                 Color(
-                        (e as Array<*>)[0] as Float,
-                        e[1] as Float,
-                        e[2] as Float
+                        (arr[0] as Number).toFloat(),
+                        (arr[1] as Number).toFloat(),
+                        (arr[2] as Number).toFloat()
                 ),
-                e[3] as Float
+                (arr[3] as Number).toFloat()
         )
     }
     println(it.get("description"))

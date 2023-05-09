@@ -92,7 +92,8 @@ class VideoRenderer {
         GLES20.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, player.mTextureId)
         println("HW: ${player.videoWidth} ${player.videoHeight}")
-        GLES20.glUniform2f(texSizeUniform, player.videoWidth, player.videoHeight)
+//        GLES20.glUniform2f(texSizeUniform, player.videoWidth, player.videoHeight) Not needed now
+        GLES20.glUseProgram(mQuadProgram)
         GLES20.glUniform3f(
                 greenScreenColorUniform,
                 player.videoParams.greenScreenColor.red,
@@ -100,7 +101,6 @@ class VideoRenderer {
                 player.videoParams.greenScreenColor.blue)
         GLES20.glUniform1f(chromakeyThresholdUniform, player.videoParams.chromakeyThreshold)
 
-        GLES20.glUseProgram(mQuadProgram)
 
         updateQuardCoord(player.videoWidth, player.videoHeight)
         println("new QuadCoord: ${QUAD_COORDS.contentToString()}")
@@ -237,7 +237,7 @@ class VideoPlayer : OnFrameAvailableListener {
         private set
     var videoHeight = 0.0f
         private set
-    var videoParams = VideoParams(Color(0.0f, 1.0f, 0.0f), 0.7f)
+    var videoParams = VideoParams(Color(0.0f, 0.99f, 0.0f), 0.7f)
 
     fun initialize() {
         val textures = IntArray(1)
