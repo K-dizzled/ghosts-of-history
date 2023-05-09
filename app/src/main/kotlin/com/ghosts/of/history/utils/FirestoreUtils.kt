@@ -36,6 +36,7 @@ suspend fun saveAnchorToFirebase(anchorId: String, anchorName: String, latitude:
             null,
             null,
             "",
+            false,
             1.0f,
             if (latitude != null && longitude != null) {
                 GeoPosition(latitude, longitude)
@@ -51,6 +52,7 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
             "id" to anchor.anchorId,
             "name" to anchor.name,
             "video_name" to anchor.videoName,
+            "enabled" to anchor.enabled,
             "scaling_factor" to anchor.scalingFactor,
             "latitude" to anchor.geoPosition?.latitude,
             "longitude" to anchor.geoPosition?.longitude
@@ -61,17 +63,33 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
 suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.collection("AnchorBindings").whereNotEqualTo("video_name", "").get().await().map {
     val latitude = it.get("latitude")
     val longitude = it.get("longitude")
+    val enabled = it.get("enabled") as Boolean? ?: false
     println(it.get("description"))
-    AnchorData(it.get("id") as String, it.get("name") as String, it.get("description") as String?, it.get("image_name") as String?, it.get("video_name") as String, (it.get("scaling_factor") as Number).toFloat(), if (latitude != null && longitude != null) {
-        GeoPosition((latitude as Number).toDouble(), (longitude as Number).toDouble())
-    } else {
-        null
-    })
+    AnchorData(
+            it.get("id") as String,
+            it.get("name") as String,
+            it.get("description") as String?,
+            it.get("image_name") as String?,
+            it.get("video_name") as String,
+            enabled,
+            (it.get("scaling_factor") as Number).toFloat(),
+            if (latitude != null && longitude != null) {
+                GeoPosition((latitude as Number).toDouble(), (longitude as Number).toDouble())
+            } else {
+                null
+            })
 }
 
 data class GeoPosition(val latitude: Double, val longitude: Double)
 
-data class AnchorData(val anchorId: String, val name: String, val description: String?, val imageName: String?, val videoName: String, val scalingFactor: Float, val geoPosition: GeoPosition?)
+data class AnchorData(val anchorId: String,
+                      val name: String,
+                      val description: String?,
+                      val imageName: String?,
+                      val videoName: String,
+                      val enabled: Boolean,
+                      val scalingFactor: Float,
+                      val geoPosition: GeoPosition?)
 
 //// onSuccessCallback processes just a video name
 //suspend fun processAnchorDescription(anchorId: String): String? {
