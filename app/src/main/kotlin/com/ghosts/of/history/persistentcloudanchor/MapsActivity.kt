@@ -78,7 +78,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     fun addMarkers(anchors: List<AnchorData>) {
         for(anchor in anchors) {
-            val markerPosition = anchor.geoPosition?.let { LatLng(it.latitude, anchor.geoPosition.longitude) }
+            val markerPosition = anchor.geoPosition?.let { LatLng(it.latitude, it.longitude) }
             val marker = map?.addMarker(MarkerOptions()
                     .position(markerPosition ?: LatLng(0.0, 0.0))
                     .title(anchor.name)
