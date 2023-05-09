@@ -37,6 +37,7 @@ class AnchorListActivity : AppCompatActivity() {
 
         setSupportActionBar(findViewById(R.id.toolbar))
         binding.toolbarLayout.title = "Exhibit list"
+
     }
 
     private suspend fun fetchItems(): List<ItemModel> = withContext(Dispatchers.IO) {
