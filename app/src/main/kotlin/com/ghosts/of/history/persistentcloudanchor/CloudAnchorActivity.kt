@@ -38,7 +38,7 @@ import com.ghosts.of.history.common.helpers.*
 import com.ghosts.of.history.common.rendering.*
 import com.ghosts.of.history.persistentcloudanchor.CloudAnchorManager.CloudAnchorListener
 import com.ghosts.of.history.persistentcloudanchor.PrivacyNoticeDialogFragment.HostResolveListener
-import com.ghosts.of.history.utils.AnchorData
+import com.ghosts.of.history.model.*
 import com.ghosts.of.history.utils.fetchVideoFromStorage
 import com.ghosts.of.history.utils.getAnchorsDataFromFirebase
 import com.ghosts.of.history.utils.saveAnchorToFirebase
