@@ -1,6 +1,7 @@
 package com.ghosts.of.history.utils
 
 import android.content.Context
+import com.ghosts.of.history.model.*
 import com.google.ar.core.Anchor
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -18,18 +19,24 @@ import java.util.*
 
 // onSuccessCallback processes an in-storage-path of this video
 fun processVideoPathByName(videoName: String, onSuccessCallback: (String?) -> Unit) {
-    Firebase.firestore.collection("StorageLinks").whereEqualTo("id", videoName).get().addOnSuccessListener { docs ->
-        val firstDoc = if (docs.documents.size > 0) {
-            docs.documents[0]
-        } else {
-            null
+    Firebase.firestore.collection("StorageLinks").whereEqualTo("id", videoName).get()
+        .addOnSuccessListener { docs ->
+            val firstDoc = if (docs.documents.size > 0) {
+                docs.documents[0]
+            } else {
+                null
+            }
+            onSuccessCallback(firstDoc?.get("in_storage_path") as String?)
         }
-        onSuccessCallback(firstDoc?.get("in_storage_path") as String?)
-    }
 }
 
 // onSuccessCallback processes an in-storage-path of this video
-suspend fun saveAnchorToFirebase(anchorId: String, anchorName: String, latitude: Double?, longitude: Double?) {
+suspend fun saveAnchorToFirebase(
+    anchorId: String,
+    anchorName: String,
+    latitude: Double?,
+    longitude: Double?
+) {
     val anchor = AnchorData(
             anchorId,
             anchorName,
@@ -113,29 +120,8 @@ data class AnchorData(val anchorId: String,
                       val geoPosition: GeoPosition?,
                       val videoParams: VideoParams? = null)
 
-//// onSuccessCallback processes just a video name
-//suspend fun processAnchorDescription(anchorId: String): String? {
-//    val docs = Firebase.firestore.collection("AnchorBindings").whereEqualTo("id", anchorId).get().await()
-//    val firstDoc = if (docs.documents.size > 0) {
-//        docs.documents[0]
-//    } else {
-//        null
-//    }
-//    return firstDoc?.get("video_name") as String?
-//}
-//
-//suspend fun processAnchorSets(setName: String): Array<String>? {
-//    val docs = Firebase.firestore.collection("AnchorSets").whereEqualTo("name", setName).get().await()
-//    val firstDoc = if (docs.documents.size > 0) {
-//        docs.documents[0]
-//    } else {
-//        null
-//    }
-//    return firstDoc?.get("anchor_ids") as Array<String>?
-//}
-
-suspend fun fetchVideoFromStorage(path: String, context: Context): Result<File> = fetchFileFromStorage("videos/$path", context)
-suspend fun fetchImageFromStorage(path: String, context: Context): Result<File> = fetchFileFromStorage("images/$path", context)
+suspend fun fetchImageFromStorage(path: String, context: Context): Result<File> =
+    fetchFileFromStorage("images/$path", context)
 
 suspend fun fetchFileFromStorage(path: String, context: Context): Result<File> = runCatching {
     println("FirestoreUtils: fetching $path with context $context")
@@ -159,9 +145,9 @@ suspend fun fetchAllImageNames(): Result<List<String>> = fetchAllFilenames("imag
 suspend fun fetchAllNamedImages(context: Context): Result<List<Pair<String, File>>> {
     val imageNamesRes = fetchAllImageNames().getOrElse { return Result.failure(it) }
     val imageFiles = imageNamesRes
-            .map { fetchImageFromStorage(it, context) }
-            .filter { it.isSuccess }
-            .map { it.getOrThrow() }
+        .map { fetchImageFromStorage(it, context) }
+        .filter { it.isSuccess }
+        .map { it.getOrThrow() }
     return Result.success(imageNamesRes.zip(imageFiles))
 }
 
