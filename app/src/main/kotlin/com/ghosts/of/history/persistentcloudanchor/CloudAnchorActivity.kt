@@ -60,12 +60,9 @@ import android.location.Location
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
-import com.ghosts.of.history.utils.Color
-import com.ghosts.of.history.utils.VideoParams
 
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Main Activity for the Persistent Cloud Anchor Sample.
@@ -700,7 +697,7 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         createSession()
         val resolveListener = ResolveListener()
         lifecycleScope.launch {
-            val anchorsData = getAnchorsDataFromFirebase().filter { it.enabled }
+            val anchorsData = getAnchorsDataFromFirebase().filter { it.isEnabled }
             synchronized(anchorLock) {
                 unresolvedAnchorIds = anchorsData.map { it.anchorId }.toMutableList()
                 anchorIdToAnchorData = anchorsData.associateBy { it.anchorId }

@@ -71,6 +71,7 @@ class AnchorsDataRepositoryImpl private constructor(
             description = null,
             imageName = null,
             videoName = "",
+            isEnabled = false,
             scalingFactor = 1.0f,
             geoPosition = geoPosition,
             isVisited = false

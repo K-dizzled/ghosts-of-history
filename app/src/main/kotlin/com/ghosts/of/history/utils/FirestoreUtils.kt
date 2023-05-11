@@ -2,13 +2,10 @@ package com.ghosts.of.history.utils
 
 import android.content.Context
 import com.ghosts.of.history.model.*
-import com.google.ar.core.Anchor
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -65,7 +62,7 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
             "id" to anchor.anchorId,
             "name" to anchor.name,
             "video_name" to anchor.videoName,
-            "enabled" to anchor.enabled,
+            "enabled" to anchor.isEnabled,
             "scaling_factor" to anchor.scalingFactor,
             "latitude" to anchor.geoPosition?.latitude,
             "longitude" to anchor.geoPosition?.longitude,
@@ -77,6 +74,11 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
 suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.collection("AnchorBindings").whereNotEqualTo("video_name", "").get().await().map {
     val latitude = it.get("latitude")
     val longitude = it.get("longitude")
+    val geoPosition = if (latitude != null && longitude != null) {
+        GeoPosition((latitude as Number).toDouble(), (longitude as Number).toDouble())
+    } else {
+        null
+    }
     val enabled = it.get("enabled") as Boolean? ?: false
     val videoParams = it.get("video_params")?. let { array ->
         val arr = array as ArrayList<*>
@@ -91,34 +93,21 @@ suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.
     }
     println(it.get("description"))
     AnchorData(
-            it.get("id") as String,
-            it.get("name") as String,
-            it.get("description") as String?,
-            it.get("image_name") as String?,
-            it.get("video_name") as String,
-            enabled,
-            (it.get("scaling_factor") as Number).toFloat(),
-            if (latitude != null && longitude != null) {
-                GeoPosition((latitude as Number).toDouble(), (longitude as Number).toDouble())
-            } else {
-                null
-            },
-            videoParams
+            anchorId = it.get("id") as String,
+            name = it.get("name") as String,
+            description = it.get("description") as String?,
+            imageName = it.get("image_name") as String?,
+            videoName = it.get("video_name") as String,
+            isEnabled = enabled,
+            scalingFactor = (it.get("scaling_factor") as Number).toFloat(),
+            geoPosition = geoPosition,
+            videoParams = videoParams,
+            isVisited = false
     )
 }
 
-data class GeoPosition(val latitude: Double, val longitude: Double)
-data class Color(val red: Float, val green: Float, val blue: Float)
-data class VideoParams(val greenScreenColor: Color, val chromakeyThreshold: Float)
-data class AnchorData(val anchorId: String,
-                      val name: String,
-                      val description: String?,
-                      val imageName: String?,
-                      val videoName: String,
-                      val enabled: Boolean,
-                      val scalingFactor: Float,
-                      val geoPosition: GeoPosition?,
-                      val videoParams: VideoParams? = null)
+suspend fun fetchVideoFromStorage(path: String, context: Context): Result<File> =
+    fetchFileFromStorage("videos/$path", context)
 
 suspend fun fetchImageFromStorage(path: String, context: Context): Result<File> =
     fetchFileFromStorage("images/$path", context)

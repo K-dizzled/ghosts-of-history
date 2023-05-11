@@ -11,8 +11,7 @@ import android.opengl.Matrix
 import android.util.Log
 import android.view.Surface
 import com.ghosts.of.history.common.rendering.ShaderUtil.checkGLError
-import com.ghosts.of.history.utils.Color
-import com.ghosts.of.history.utils.VideoParams
+import com.ghosts.of.history.model.*
 import java.io.File
 import java.io.IOException
 import java.lang.Float.max
