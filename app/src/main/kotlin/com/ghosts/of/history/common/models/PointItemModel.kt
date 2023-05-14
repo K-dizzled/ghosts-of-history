@@ -13,7 +13,7 @@ import com.ghosts.of.history.R
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import androidx.lifecycle.lifecycleScope
-import com.ghosts.of.history.utils.AnchorData
+import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.utils.fetchImageFromStorage
 import com.ghosts.of.history.utils.saveAnchorSetToFirebase
 import kotlinx.coroutines.launch
@@ -43,9 +43,9 @@ class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<
         val item = itemList[position]
         holder.titleView.text = item.anchorData.name
         holder.descriptionView.text = item.anchorData.description ?: "No description"
-        holder.checkBox.isChecked = item.anchorData.enabled
+        holder.checkBox.isChecked = item.anchorData.isEnabled
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
-            val changedAnchorData = item.anchorData.copy(enabled = isChecked)
+            val changedAnchorData = item.anchorData.copy(isEnabled = isChecked)
             item.scope.launch {
                 saveAnchorSetToFirebase(changedAnchorData)
             }
