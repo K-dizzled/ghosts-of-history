@@ -3,6 +3,18 @@ apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
 
+def getMapsApiKey() {
+    def propertiesFile = rootProject.file('local.properties')
+    if (propertiesFile.exists()) {
+        Properties properties = new Properties()
+        properties.load(new FileInputStream(propertiesFile))
+        return properties['MAPS_API_KEY'] ?: "0"
+    } else {
+        return "0"
+    }
+}
+
+
 android {
     compileSdkVersion 33
     defaultConfig {
@@ -14,6 +26,8 @@ android {
         targetSdkVersion 33
         versionCode 1
         versionName '1.0'
+        buildConfigField 'String', 'MAPS_API_KEY', "\"${getMapsApiKey()}\""
+        resValue 'string', 'maps_api_key', getMapsApiKey()
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
