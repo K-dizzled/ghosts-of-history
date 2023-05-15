@@ -51,14 +51,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "848762085536-j70vqskdigqcs0btku44d9h5l25i72qr.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.ghosts.of.history.editor",
-            "certificate_hash": "3f2494c6577d1f08f295d7f4ac7fc66c88c235f4"
-          }
-        },
-        {
           "client_id": "848762085536-mspc80hncitanbe0fu5igjqu1ik8bism.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -101,14 +93,6 @@
           "android_info": {
             "package_name": "com.ghosts.of.history.explorer",
             "certificate_hash": "699e0ea55fb8cbc104ca6b16d30221ebaa21a049"
-          }
-        },
-        {
-          "client_id": "848762085536-8lh91aq4m3lafui7f45ivnq5tm2lc9r1.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.ghosts.of.history.explorer",
-            "certificate_hash": "3f2494c6577d1f08f295d7f4ac7fc66c88c235f4"
           }
         },
         {
