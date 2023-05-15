@@ -41,6 +41,11 @@ class AnchorListActivity : AppCompatActivity() {
         job = Job()
         uiScope = CoroutineScope(Dispatchers.Main + job)
 
+        val addMarkerButton = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.add_marker_button)
+        addMarkerButton.setOnClickListener {
+            startActivity(android.content.Intent(this, MainLobbyActivity::class.java))
+        }
+
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 

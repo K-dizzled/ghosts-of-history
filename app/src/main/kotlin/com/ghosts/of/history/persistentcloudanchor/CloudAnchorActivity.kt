@@ -56,6 +56,7 @@ import javax.microedition.khronos.opengles.GL10
 import kotlin.math.hypot
 import android.view.View
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.location.Location
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
@@ -767,14 +768,19 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
 
         /** Callback function invoked when the user presses the OK button in the Save Anchor Dialog.  */
         private fun onAnchorNameEntered(anchorNickname: String) {
-            lifecycleScope.launch {
-                getDeviceLocation()
-                cloudAnchorId?.let { anchorId ->
-                    saveAnchorToFirebase(anchorId, anchorNickname, lastKnownLocation?.latitude, lastKnownLocation?.longitude)
-                }
-            }
-            val intent = Intent(this@CloudAnchorActivity, MainLobbyActivity::class.java)
-            startActivity(intent)
+//            lifecycleScope.launch {
+//                getDeviceLocation()
+//                cloudAnchorId?.let { anchorId ->
+//                    saveAnchorToFirebase(anchorId, anchorNickname, lastKnownLocation?.latitude, lastKnownLocation?.longitude)
+//                }
+//            }
+            val intent = Intent()
+            intent.putExtra("anchorName", anchorNickname)
+            intent.putExtra("anchorId", cloudAnchorId ?: "unknown")
+            intent.putExtra("latitude", lastKnownLocation?.latitude)
+            intent.putExtra("longitude", lastKnownLocation?.longitude)
+            setResult(Activity.RESULT_OK, intent)
+            finish()
         }
 
         private fun saveAnchorWithNickname() {
