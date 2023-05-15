@@ -9,14 +9,17 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
-import com.ghosts.of.history.R
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CoroutineScope
-import androidx.lifecycle.lifecycleScope
+import com.ghosts.of.history.R
 import com.ghosts.of.history.model.AnchorData
+import com.ghosts.of.history.persistentcloudanchor.AnchorListActivity
+import com.ghosts.of.history.persistentcloudanchor.EditActivity
 import com.ghosts.of.history.utils.fetchImageFromStorage
 import com.ghosts.of.history.utils.saveAnchorSetToFirebase
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+
 
 data class ItemModel(
     val anchorData: AnchorData,
@@ -36,11 +39,11 @@ class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_layout, parent, false)
+
         return ItemViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        val item = itemList[position]
+    private fun processOneItem(holder: ItemViewHolder, item: ItemModel) {
         holder.titleView.text = item.anchorData.name
         holder.descriptionView.text = item.anchorData.description ?: "No description"
         holder.checkBox.isChecked = item.anchorData.isEnabled
@@ -56,6 +59,22 @@ class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<
                 val bitmap = BitmapFactory.decodeFile(image.absolutePath)
                 holder.imageView.setImageBitmap(bitmap)
             }
+        }
+    }
+
+    override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
+        val item = itemList[position]
+
+        holder.itemView.setOnClickListener {
+            onViewHolderClick(it, item.anchorData)
+        }
+        processOneItem(holder, item)
+    }
+
+    fun onViewHolderClick(view: View, anchorData: AnchorData) {
+        Intent(view.context, EditActivity::class.java).also { intent ->
+            intent.putExtra("anchorData", Json.encodeToString(AnchorData.serializer(), anchorData))
+            (view.context as? AnchorListActivity)?.registerEditResultLauncher?.launch(intent)
         }
     }
 

@@ -1,6 +1,10 @@
 package com.ghosts.of.history.persistentcloudanchor
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +21,16 @@ class AnchorListActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAnchorListBinding
     private lateinit var job: Job
     private lateinit var uiScope: CoroutineScope
+
+    val registerEditResultLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                uiScope.launch {
+                    val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+                    recyclerView.adapter = ItemAdapter(fetchItems())
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
