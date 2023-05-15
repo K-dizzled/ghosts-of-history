@@ -1,4 +1,4 @@
-package com.ghosts.of.history.persistentcloudanchor
+package com.ghosts.of.history.explorer
 
 import android.os.Bundle
 import android.view.View
@@ -43,6 +43,7 @@ import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.data.AnchorsDataRepository
 import com.ghosts.of.history.dataimpl.AnchorsDataRepositoryImpl
 import com.ghosts.of.history.model.AnchorId
+import com.ghosts.of.history.persistentcloudanchor.MapsActivityViewModel
 import com.ghosts.of.history.utils.fetchImageFromStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -122,7 +123,7 @@ class MapsActivity : AppCompatActivity() {
     }
 
     private fun onARButtonPressed() {
-        Intent(this, MainLobbyActivity::class.java).also { intent ->
+        Intent(this, ExplorerLobbyActivity::class.java).also { intent ->
             startActivity(intent)
         }
     }

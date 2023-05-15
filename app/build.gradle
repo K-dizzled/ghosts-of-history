@@ -35,6 +35,19 @@ android {
         dataBinding = true
         viewBinding true
     }
+    flavorDimensions "default"
+    productFlavors {
+        editor {
+            dimension "default"
+            applicationIdSuffix ".editor"
+            versionNameSuffix "-editor"
+        }
+        explorer {
+            dimension "default"
+            applicationIdSuffix ".explorer"
+            versionNameSuffix "-explorer"
+        }
+    }
 }
 
 repositories {
