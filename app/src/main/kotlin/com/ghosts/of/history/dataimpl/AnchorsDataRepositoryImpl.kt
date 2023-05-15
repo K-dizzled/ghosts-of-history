@@ -52,7 +52,7 @@ class AnchorsDataRepositoryImpl private constructor(
             val anchorData = state.anchorsData[anchorId] ?: return@update state
             val newAnchorData = block(anchorData)
             val newAnchorsData = state.anchorsData + Pair(anchorId, newAnchorData)
-            anchorsDataDataSource.save(anchorData)
+            anchorsDataDataSource.save(newAnchorData)
             state.copy(anchorsData = newAnchorsData)
         }
     }
