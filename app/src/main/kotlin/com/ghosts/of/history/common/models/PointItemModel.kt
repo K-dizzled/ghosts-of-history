@@ -1,0 +1,82 @@
+package com.ghosts.of.history.common.models
+
+import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.CheckBox
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.ghosts.of.history.R
+import com.ghosts.of.history.model.AnchorData
+import com.ghosts.of.history.persistentcloudanchor.AnchorListActivity
+import com.ghosts.of.history.persistentcloudanchor.EditActivity
+import com.ghosts.of.history.utils.fetchImageFromStorage
+import com.ghosts.of.history.utils.saveAnchorSetToFirebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+
+
+data class ItemModel(
+    val anchorData: AnchorData,
+    val scope: CoroutineScope,
+    val context: Context
+)
+
+class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+
+    inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val imageView: ImageView = view.findViewById(R.id.itemImageView)
+        val titleView: TextView = view.findViewById(R.id.itemTitleView)
+        val descriptionView: TextView = view.findViewById(R.id.itemDescriptionView)
+        val checkBox: CheckBox = view.findViewById(R.id.enable_button)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
+        val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_layout, parent, false)
+
+        return ItemViewHolder(view)
+    }
+
+    private fun processOneItem(holder: ItemViewHolder, item: ItemModel) {
+        holder.titleView.text = item.anchorData.name
+        holder.descriptionView.text = item.anchorData.description ?: "No description"
+        holder.checkBox.isChecked = item.anchorData.isEnabled
+        holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
+            val changedAnchorData = item.anchorData.copy(isEnabled = isChecked)
+            item.scope.launch {
+                saveAnchorSetToFirebase(changedAnchorData)
+            }
+        }
+        item.scope.launch {
+            item.anchorData.imageName?.let {imgUrl ->
+                val image = fetchImageFromStorage(imgUrl, item.context).getOrElse { return@let }
+                val bitmap = BitmapFactory.decodeFile(image.absolutePath)
+                holder.imageView.setImageBitmap(bitmap)
+            }
+        }
+    }
+
+    override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
+        val item = itemList[position]
+
+        holder.itemView.setOnClickListener {
+            onViewHolderClick(it, item.anchorData)
+        }
+        processOneItem(holder, item)
+    }
+
+    fun onViewHolderClick(view: View, anchorData: AnchorData) {
+        Intent(view.context, EditActivity::class.java).also { intent ->
+            intent.putExtra("anchorData", Json.encodeToString(AnchorData.serializer(), anchorData))
+            (view.context as? AnchorListActivity)?.registerEditResultLauncher?.launch(intent)
+        }
+    }
+
+    override fun getItemCount() = itemList.size
+}

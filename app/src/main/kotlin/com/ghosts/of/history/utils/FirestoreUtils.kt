@@ -61,6 +61,8 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
     val document = mapOf(
             "id" to anchor.anchorId,
             "name" to anchor.name,
+            "description" to anchor.description,
+            "image_name" to anchor.imageName,
             "video_name" to anchor.videoName,
             "enabled" to anchor.isEnabled,
             "scaling_factor" to anchor.scalingFactor,
@@ -68,7 +70,7 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
             "longitude" to anchor.geoPosition?.longitude,
             "video_params" to videoParams,
     )
-    Firebase.firestore.collection("AnchorBindings").document().set(document).await()
+    Firebase.firestore.collection("AnchorBindings").document(anchor.anchorId).set(document).await()
 }
 
 suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.collection("AnchorBindings").whereNotEqualTo("video_name", "").get().await().map {
