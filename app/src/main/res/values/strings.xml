@@ -16,6 +16,8 @@
 <resources>
     <!-- Strings in the main lobby activity -->
     <string name="app_name">Ghosts of history</string>
+    <string name="app_name_explorer">Ghosts of history: Explore!</string>
+    <string name="app_name_editor">Ghosts of history: Private Access</string>
     <string name="cancel">Cancel</string>
     <string name="host_button_text">Start scanning</string>
     <string name="host_title_text">Create a new exhibit</string>
