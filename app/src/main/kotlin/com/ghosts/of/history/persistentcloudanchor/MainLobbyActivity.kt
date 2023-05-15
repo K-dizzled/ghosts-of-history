@@ -29,6 +29,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.lifecycleScope
@@ -37,7 +38,10 @@ import com.ghosts.of.history.common.helpers.DisplayRotationHelper
 import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.model.GeoPosition
 import com.ghosts.of.history.utils.saveAnchorSetToFirebase
+import com.ghosts.of.history.utils.uploadImageToStorage
+import com.ghosts.of.history.utils.uploadVideoToStorage
 import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -49,6 +53,9 @@ class MainLobbyActivity : AppCompatActivity() {
     private lateinit var displayRotationHelper: DisplayRotationHelper
     private var selectedImage: Uri? = null
     private var selectedVideo: Uri? = null
+    private val viewModel: MainLobbyActivityViewModel by viewModels {
+        MainLobbyActivityViewModel.Factory
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -155,6 +162,16 @@ class MainLobbyActivity : AppCompatActivity() {
 
                     val label = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.name_input_text).text
                     val description = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.description_input_text).text
+                    val image = selectedImage
+                    val imageName = if (image != null) {
+                        lifecycleScope.launch { uploadImageToStorage(image) }
+                        image.lastPathSegment
+                    } else null
+                    val video = selectedVideo
+                    val videoName = if (video != null) {
+                        lifecycleScope.launch { uploadVideoToStorage(video) }
+                        video.lastPathSegment!!
+                    } else ""
                     //val image = File(selectedImage?.path!!)
                     //val video = File(selectedVideo?.path!!)
 
@@ -171,17 +188,16 @@ class MainLobbyActivity : AppCompatActivity() {
                             anchorId,
                             label.toString(),
                             description.toString(),
-                            null,
-                            "",
+                            imageName,
+                            videoName,
                             true,
                             1.0f,
                             geoposition,
-                            null,
-                            false,
+                            null
                     )
 
                     lifecycleScope.launch {
-                        saveAnchorSetToFirebase(anchorData)
+                        viewModel.saveAnchorData(anchorData)
                     }
                 }
             }
@@ -208,30 +224,6 @@ class MainLobbyActivity : AppCompatActivity() {
     public override fun onPause() {
         super.onPause()
         displayRotationHelper.onPause()
-    }
-
-    private fun bitmapToFile(bitmap: Bitmap, fileNameToSave: String): File? {
-        //create a file to write bitmap data
-        var file: File? = null
-        return try {
-            file = File(Environment.getExternalStorageDirectory().toString() + File.separator + fileNameToSave)
-            file.createNewFile()
-
-            //Convert bitmap to byte array
-            val bos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos) // YOU can also save it in JPEG
-            val bitmapdata = bos.toByteArray()
-
-            //write the bytes in file
-            val fos = FileOutputStream(file)
-            fos.write(bitmapdata)
-            fos.flush()
-            fos.close()
-            file
-        } catch (e: Exception) {
-            e.printStackTrace()
-            file // it will return null
-        }
     }
 
     private fun onHostButtonPress() {

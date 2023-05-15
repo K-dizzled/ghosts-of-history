@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.EditText
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.ghosts.of.history.R
@@ -24,6 +25,10 @@ class EditActivity : AppCompatActivity() {
     private var editLongtitude: EditText? = null
     private var selectedImageUri : Uri? = null
     private var selectedVideoUri : Uri? = null
+
+    private val viewModel: EditActivityViewModel by viewModels {
+        EditActivityViewModel.Factory
+    }
 
     val SELECT_IMAGE_REQUEST = 100
     val SELECT_VIDEO_REQUEST = 101
@@ -132,13 +137,10 @@ class EditActivity : AppCompatActivity() {
                 isEnabled = anchorData.isEnabled,
                 scalingFactor = anchorData.scalingFactor,
                 geoPosition = getGeoPosition() ?: anchorData.geoPosition,
-                videoParams = anchorData.videoParams,
-                isVisited = anchorData.isVisited
+                videoParams = anchorData.videoParams
         )
         lifecycleScope.launch {
-            saveAnchorSetToFirebase(newAnchorData)
-            val intent = Intent()
-            setResult(RESULT_OK, intent)
+            viewModel.updateAnchorData(newAnchorData)
             finish()
         }
     }
