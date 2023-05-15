@@ -1,4 +1,4 @@
-package com.ghosts.of.history.persistentcloudanchor
+package com.ghosts.of.history.explorer
 
 import android.os.Bundle
 import android.view.View
@@ -122,7 +122,7 @@ class MapsActivity : AppCompatActivity() {
     }
 
     private fun onARButtonPressed() {
-        Intent(this, MainLobbyActivity::class.java).also { intent ->
+        Intent(this, ExplorerLobbyActivity::class.java).also { intent ->
             startActivity(intent)
         }
     }

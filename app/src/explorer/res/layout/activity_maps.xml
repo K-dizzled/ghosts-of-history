@@ -11,7 +11,7 @@ android:orientation="vertical">
     android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.ghosts.of.history.persistentcloudanchor.MapsActivity" />
+    tools:context="com.ghosts.of.history.explorer.MapsActivity" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/ar_button"
