@@ -49,13 +49,15 @@ class EditActivity : AppCompatActivity() {
 
         val buttonSelectImage = findViewById<Button>(R.id.button_select_image)
         buttonSelectImage.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            val intent = Intent(Intent.ACTION_PICK)
+            intent.type = "image/*"
             startActivityForResult(intent, SELECT_IMAGE_REQUEST)
         }
 
         val buttonSelectVideo = findViewById<Button>(R.id.button_select_video)
         buttonSelectVideo.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+            val intent = Intent(Intent.ACTION_PICK)
+            intent.type = "video/*"
             startActivityForResult(intent, SELECT_VIDEO_REQUEST)
         }
 
