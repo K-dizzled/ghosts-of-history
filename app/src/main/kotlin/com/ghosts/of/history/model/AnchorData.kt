@@ -24,5 +24,4 @@ data class AnchorData(
     val scalingFactor: Float,
     val geoPosition: GeoPosition?,
     val videoParams: VideoParams? = null,
-    val isVisited: Boolean = false,
 )
