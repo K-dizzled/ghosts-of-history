@@ -72,18 +72,36 @@ class MainLobbyActivity : AppCompatActivity() {
 
     private fun checkAndPickMedia(pickCode: Int) {
         //check runtime permission
-        if (checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) ==
-                PackageManager.PERMISSION_DENIED ||
-                checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO) ==
-                PackageManager.PERMISSION_DENIED) {
-            //permission denied
-            val permissions = arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO);
-            //show popup to request runtime permission
-            requestPermissions(permissions, PERMISSION_CODE);
-        }
-        else{
-            //permission already granted
-            pickMediaFromGallery(pickCode);
+        if (android.os.Build.VERSION.SDK_INT < 33) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                    PackageManager.PERMISSION_DENIED) {
+                //permission denied
+                val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE);
+                //show popup to request runtime permission
+                requestPermissions(permissions, PERMISSION_CODE);
+            }
+            else{
+                //permission already granted
+                pickMediaFromGallery(pickCode);
+            }
+        } else {
+            if (checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) ==
+                    PackageManager.PERMISSION_DENIED ||
+                    checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO) ==
+                    PackageManager.PERMISSION_DENIED) {
+                //permission denied
+
+                val permissions = arrayOf(
+                        Manifest.permission.READ_MEDIA_IMAGES,
+                        Manifest.permission.READ_MEDIA_VIDEO
+                )
+                //show popup to request runtime permission
+                requestPermissions(permissions, PERMISSION_CODE);
+            }
+            else{
+                //permission already granted
+                pickMediaFromGallery(pickCode);
+            }
         }
     }
 
