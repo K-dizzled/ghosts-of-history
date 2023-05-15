@@ -31,6 +31,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import coil.load
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.location.LocationServices
@@ -47,6 +48,7 @@ import com.ghosts.of.history.model.AnchorId
 import com.ghosts.of.history.persistentcloudanchor.CloudAnchorActivity
 import com.ghosts.of.history.persistentcloudanchor.MapsActivityViewModel
 import com.ghosts.of.history.utils.fetchImageFromStorage
+import com.ghosts.of.history.utils.getFileURL
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -70,7 +72,7 @@ class MapsActivity : AppCompatActivity() {
     private var lastKnownLocation: Location? = null
     private lateinit var popUpDialog: Dialog
 
-    private var anchorImages: HashMap<String, File> = HashMap()
+    private lateinit var anchorsDataRepository: AnchorsDataRepository
 
     private val viewModel: MapsActivityViewModel by viewModels {
         MapsActivityViewModel.Factory
@@ -97,6 +99,7 @@ class MapsActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         lifecycleScope.launch {
+            anchorsDataRepository = AnchorsDataRepositoryImpl(applicationContext)
 
             // Obtain the SupportMapFragment and get notified when the map is ready to be used.
             val mapFragment = supportFragmentManager
@@ -131,7 +134,7 @@ class MapsActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private suspend fun addMarkers(anchorsDataState: AnchorsDataState) = coroutineScope {
+    private suspend fun addMarkers(anchorsDataState: AnchorsDataState) {
         map.clear()
         for ((anchorId, anchorData) in anchorsDataState.anchorsData) {
             val color = if (anchorsDataState.visitedAnchorIds.contains(anchorId)) {
@@ -153,16 +156,6 @@ class MapsActivity : AppCompatActivity() {
                     .snippet(anchorId)
                     .icon(BitmapDescriptorFactory.defaultMarker(color))
             )
-
-            launch {
-                anchorData.imageName?.let { imageUrl ->
-                    anchorImages[anchorId] =
-                        fetchImageFromStorage(imageUrl, applicationContext).getOrElse {
-                            println("Error fetching image from storage: $it")
-                            throw it
-                        }
-                }
-            }
 
             marker?.tag = false
         }
@@ -194,7 +187,10 @@ class MapsActivity : AppCompatActivity() {
         getDeviceLocation()
     }
 
-    private fun showPopup(label: String, description: String, anchorId: String?) {
+    private suspend fun showPopup(
+        label: String, description: String,
+        anchorId: String?, imagePath: String?
+    ) {
         popUpDialog.setContentView(R.layout.activity_marker_popup)
 
         val popUpClose = popUpDialog.findViewById<View>(R.id.txtclose) as TextView
@@ -206,11 +202,11 @@ class MapsActivity : AppCompatActivity() {
         val popUpDescription = popUpDialog.findViewById<View>(R.id.description) as TextView
         popUpDescription.text = description
 
-        val loadedImage = anchorImages[anchorId]
-        if (loadedImage != null) {
+        if (imagePath != null) {
             val popUpImage = popUpDialog.findViewById(R.id.popImage) as ImageView
-            val bitmap = BitmapFactory.decodeFile(loadedImage.absolutePath)
-            popUpImage.setImageBitmap(bitmap)
+            popUpImage.load(getFileURL(imagePath)) {
+                crossfade(true)
+            }
         }
 
 
@@ -219,17 +215,16 @@ class MapsActivity : AppCompatActivity() {
     }
 
     /** Called when the user clicks a marker.  */
-    private fun onMarkerClick(marker: Marker): Boolean {
-        val anchorData: AnchorData? = viewModel
-            .anchorsDataState.value
-            .anchorsData[marker.snippet]
+    private suspend fun onMarkerClick(marker: Marker): Boolean {
+        val anchorData: AnchorData? = viewModel.anchorsDataState.value.anchorsData[marker.snippet]
         val description = anchorData?.description
         val imageUrl = anchorData?.imageName
 
         showPopup(
             marker.title ?: "No title",
             description ?: "No description",
-            marker.snippet
+            marker.snippet,
+            imageUrl
         )
 
         return true

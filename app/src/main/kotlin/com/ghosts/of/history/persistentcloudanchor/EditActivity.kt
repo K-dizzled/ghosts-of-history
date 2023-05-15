@@ -133,7 +133,6 @@ class EditActivity : AppCompatActivity() {
                 scalingFactor = anchorData.scalingFactor,
                 geoPosition = getGeoPosition() ?: anchorData.geoPosition,
                 videoParams = anchorData.videoParams,
-                isVisited = anchorData.isVisited
         )
         lifecycleScope.launch {
             saveAnchorSetToFirebase(newAnchorData)

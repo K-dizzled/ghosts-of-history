@@ -113,9 +113,12 @@ suspend fun fetchVideoFromStorage(path: String, context: Context): Result<File> 
 suspend fun fetchImageFromStorage(path: String, context: Context): Result<File> =
     fetchFileFromStorage("images/$path", context)
 
+suspend fun getFileURL(path: String): String =
+    Firebase.storage.reference.child(path).downloadUrl.await().toString()
+
 suspend fun fetchFileFromStorage(path: String, context: Context): Result<File> = runCatching {
     println("FirestoreUtils: fetching $path with context $context")
-    val url = URL(Firebase.storage.reference.child(path).downloadUrl.await().toString())
+    val url = URL(getFileURL(path))
     withContext(Dispatchers.IO) {
         val connection = url.openConnection()
         connection.connect()

@@ -177,7 +177,6 @@ class MainLobbyActivity : AppCompatActivity() {
                             1.0f,
                             geoposition,
                             null,
-                            false,
                     )
 
                     lifecycleScope.launch {
