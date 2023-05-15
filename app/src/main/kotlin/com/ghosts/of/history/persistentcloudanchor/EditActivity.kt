@@ -6,22 +6,22 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.EditText
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.ghosts.of.history.R
 import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.model.GeoPosition
-import com.ghosts.of.history.utils.saveAnchorSetToFirebase
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 
 class EditActivity : AppCompatActivity() {
-    lateinit var anchorData: AnchorData
+    private lateinit var anchorData: AnchorData
     private var editName: EditText? = null
     private var editDescription: EditText? = null
     private var editLatitude: EditText? = null
-    private var editLongtitude: EditText? = null
+    private var editLongitude: EditText? = null
     private var selectedImageUri : Uri? = null
     private var selectedVideoUri : Uri? = null
 
@@ -29,26 +29,25 @@ class EditActivity : AppCompatActivity() {
         EditActivityViewModel.Factory
     }
 
-    val SELECT_IMAGE_REQUEST = 100
-    val SELECT_VIDEO_REQUEST = 101
+    private val SELECT_IMAGE_REQUEST = 100
+    private val SELECT_VIDEO_REQUEST = 101
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
 
-        editName = findViewById<EditText>(R.id.edit_name)
-        editDescription = findViewById<EditText>(R.id.edit_description)
-        editLatitude = findViewById<EditText>(R.id.edit_latitude)
-        editLongtitude = findViewById<EditText>(R.id.edit_longtitude)
+        editName = findViewById(R.id.edit_name)
+        editDescription = findViewById(R.id.edit_description)
+        editLatitude = findViewById(R.id.edit_latitude)
+        editLongitude = findViewById(R.id.edit_longtitude)
 
-        val intent = intent
         val anchorDataString = intent.getStringExtra("anchorData")
         anchorData = Json.decodeFromString(AnchorData.serializer(), anchorDataString!!)
 
         editName?.setText(anchorData.name)
         editDescription?.setText(anchorData.description ?: "")
-        editLatitude?.setText(anchorData.geoPosition?.latitude.toString() ?: "")
-        editLongtitude?.setText(anchorData.geoPosition?.longitude.toString() ?: "")
+        editLatitude?.setText(anchorData.geoPosition?.latitude?.toString() ?: "")
+        editLongitude?.setText(anchorData.geoPosition?.longitude?.toString() ?: "")
 
 
         val buttonSelectImage = findViewById<Button>(R.id.button_select_image)
@@ -118,7 +117,7 @@ class EditActivity : AppCompatActivity() {
 
     private fun getGeoPosition(): GeoPosition? {
         val latitude: Double? = editLatitude?.text.toString().toDoubleOrNull()
-        val longitude: Double? = editLongtitude?.text.toString().toDoubleOrNull()
+        val longitude: Double? = editLongitude?.text.toString().toDoubleOrNull()
         return if (latitude != null && longitude != null) {
             GeoPosition(latitude, longitude)
         } else {
@@ -127,16 +126,15 @@ class EditActivity : AppCompatActivity() {
     }
 
     private fun saveChanges() {
-        val newAnchorData = AnchorData(
-                anchorId = anchorData.anchorId,
-                name = editName?.text.toString().let { it.ifEmpty { null } } ?: anchorData.name,
-                description = editDescription?.text.toString().let { it.ifEmpty { null } } ?: anchorData.description,
-                imageName = handleImage() ?: anchorData.imageName,
-                videoName = handleVideo() ?: anchorData.videoName,
-                isEnabled = anchorData.isEnabled,
-                scalingFactor = anchorData.scalingFactor,
-                geoPosition = getGeoPosition() ?: anchorData.geoPosition,
-                videoParams = anchorData.videoParams
+        val newName = editName?.text.toString().let { it.ifEmpty { null } }
+        val newDescription = editDescription?.text.toString().let { it.ifEmpty { null } }
+
+        val newAnchorData = anchorData.copy(
+            name = newName ?: anchorData.name,
+            description = newDescription ?: anchorData.description,
+            imageName = handleImage() ?: anchorData.imageName,
+            videoName = handleVideo() ?: anchorData.videoName,
+            geoPosition = getGeoPosition() ?: anchorData.geoPosition,
         )
         lifecycleScope.launch {
             viewModel.updateAnchorData(newAnchorData)
