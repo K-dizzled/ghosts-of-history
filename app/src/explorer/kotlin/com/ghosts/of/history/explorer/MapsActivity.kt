@@ -43,6 +43,7 @@ import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.data.AnchorsDataRepository
 import com.ghosts.of.history.dataimpl.AnchorsDataRepositoryImpl
 import com.ghosts.of.history.model.AnchorId
+import com.ghosts.of.history.persistentcloudanchor.CloudAnchorActivity
 import com.ghosts.of.history.persistentcloudanchor.MapsActivityViewModel
 import com.ghosts.of.history.utils.fetchImageFromStorage
 import kotlinx.coroutines.channels.awaitClose
@@ -123,9 +124,12 @@ class MapsActivity : AppCompatActivity() {
     }
 
     private fun onARButtonPressed() {
-        Intent(this, ExplorerLobbyActivity::class.java).also { intent ->
-            startActivity(intent)
-        }
+//        Intent(this, ExplorerLobbyActivity::class.java).also { intent ->
+//            startActivity(intent)
+//        }
+
+        val intent: Intent = CloudAnchorActivity.newResolvingIntent(this)
+        startActivity(intent)
     }
 
     private suspend fun addMarkers(anchorsData: Map<AnchorId, AnchorData>) {

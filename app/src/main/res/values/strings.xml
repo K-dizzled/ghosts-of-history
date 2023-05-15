@@ -15,7 +15,7 @@
 -->
 <resources>
     <!-- Strings in the main lobby activity -->
-    <string name="app_name">Persistent Cloud Anchor Sample</string>
+    <string name="app_name">Ghosts of history</string>
     <string name="cancel">Cancel</string>
     <string name="host_button_text">Start scanning</string>
     <string name="host_title_text">Create a new exhibit</string>
