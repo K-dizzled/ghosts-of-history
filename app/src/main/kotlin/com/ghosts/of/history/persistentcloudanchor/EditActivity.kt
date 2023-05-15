@@ -65,7 +65,11 @@ class EditActivity : AppCompatActivity() {
         buttonBack.setOnClickListener { finish() }
         val buttonSave = findViewById<Button>(R.id.button_save)
         buttonSave.setOnClickListener { saveChanges() }
+        val buttonDelete = findViewById<Button>(R.id.button_delete)
+        buttonDelete.setOnClickListener { deleteAnchor() }
     }
+
+    fun deleteAnchor() {}
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -121,8 +125,8 @@ class EditActivity : AppCompatActivity() {
     private fun saveChanges() {
         val newAnchorData = AnchorData(
                 anchorId = anchorData.anchorId,
-                name = editName?.text.toString() ?: anchorData.name,
-                description = editDescription?.text.toString() ?: anchorData.description,
+                name = editName?.text.toString().let { it.ifEmpty { null } } ?: anchorData.name,
+                description = editDescription?.text.toString().let { it.ifEmpty { null } } ?: anchorData.description,
                 imageName = handleImage() ?: anchorData.imageName,
                 videoName = handleVideo() ?: anchorData.videoName,
                 isEnabled = anchorData.isEnabled,
