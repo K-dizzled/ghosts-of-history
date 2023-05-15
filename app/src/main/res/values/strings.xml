@@ -17,10 +17,10 @@
     <!-- Strings in the main lobby activity -->
     <string name="app_name">Persistent Cloud Anchor Sample</string>
     <string name="cancel">Cancel</string>
-    <string name="host_button_text">Begin hosting</string>
-    <string name="host_title_text">Host a Cloud Anchor</string>
+    <string name="host_button_text">Start scanning</string>
+    <string name="host_title_text">Create a new exhibit</string>
     <!-- [CHAR_LIMIT=NONE] -->
-    <string name="host_instructions_text">Scan your space to create a new cloud anchor accessible by others</string>
+    <string name="host_instructions_text">First enter the details of you new exhibit, then scan your space to create a new ghost of history accessible by others</string>
     <string name="begin_resolve_button_text">Begin resolving</string>
     <!-- [CHAR_LIMIT=NONE] -->
     <string name="resolve_title_text">Resolve Cloud Anchor(s)</string>
