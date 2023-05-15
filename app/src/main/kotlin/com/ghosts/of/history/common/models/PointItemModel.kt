@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ghosts.of.history.R
 import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.persistentcloudanchor.AnchorListActivity
+import com.ghosts.of.history.persistentcloudanchor.AnchorListActivityViewModel
 import com.ghosts.of.history.persistentcloudanchor.EditActivity
 import com.ghosts.of.history.utils.fetchImageFromStorage
 import com.ghosts.of.history.utils.saveAnchorSetToFirebase
@@ -27,7 +28,7 @@ data class ItemModel(
     val context: Context
 )
 
-class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+class ItemAdapter(private val itemList: List<ItemModel>, private val viewModel: AnchorListActivityViewModel) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.itemImageView)
@@ -48,9 +49,8 @@ class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<
         holder.descriptionView.text = item.anchorData.description ?: "No description"
         holder.checkBox.isChecked = item.anchorData.isEnabled
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
-            val changedAnchorData = item.anchorData.copy(isEnabled = isChecked)
             item.scope.launch {
-                saveAnchorSetToFirebase(changedAnchorData)
+                viewModel.setEnabled(item.anchorData.anchorId, isChecked)
             }
         }
         item.scope.launch {
@@ -74,7 +74,8 @@ class ItemAdapter(private val itemList: List<ItemModel>) : RecyclerView.Adapter<
     fun onViewHolderClick(view: View, anchorData: AnchorData) {
         Intent(view.context, EditActivity::class.java).also { intent ->
             intent.putExtra("anchorData", Json.encodeToString(AnchorData.serializer(), anchorData))
-            (view.context as? AnchorListActivity)?.registerEditResultLauncher?.launch(intent)
+//            (view.context as? AnchorListActivity)?.registerEditResultLauncher?.launch(intent)
+            view.context.startActivity(intent)
         }
     }
 

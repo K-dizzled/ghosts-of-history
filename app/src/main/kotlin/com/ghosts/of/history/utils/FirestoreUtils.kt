@@ -1,6 +1,7 @@
 package com.ghosts.of.history.utils
 
 import android.content.Context
+import android.net.Uri
 import com.ghosts.of.history.model.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -148,5 +149,27 @@ suspend fun fetchAllFilenames(path: String): Result<List<String>> = Result.runCa
     Firebase.storage.reference.child(path).listAll().await().items.map { it.name }
 }
 
+suspend fun uploadImageToStorage(uri: Uri) {
+    Firebase.storage.reference.child("images/").putFile(uri).await()
+}
+
+suspend fun uploadVideoToStorage(uri: Uri) {
+    Firebase.storage.reference.child("videos/").putFile(uri).await()
+}
+suspend fun uploadFileToStorage(path: String, uri: Uri) {
+    Firebase.storage.reference.child(path).putFile(uri).await()
+}
+
+//suspend fun uploadFileToStorage(path: String, file: File): Result<Uri> = runCatching {
+//    val storageRef = FirebaseStorage.getInstance().reference.child(path)
+//    val uploadTask = storageRef.putFile(Uri.fromFile(file))
+//    val uri = uploadTask.continueWithTask { task ->
+//        if (!task.isSuccessful) {
+//            task.exception?.let { throw it }
+//        }
+//        storageRef.downloadUrl
+//    }.await()
+//    uri
+//}
 
 
