@@ -6,12 +6,13 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.ghosts.of.history.data.AnchorsDataRepository
+import com.ghosts.of.history.data.*
+import com.ghosts.of.history.model.*
 
 class MapsActivityViewModel constructor(
     anchorsDataRepository: AnchorsDataRepository
 ) : ViewModel() {
-    val anchorsData = anchorsDataRepository.anchorsData
+    val anchorsDataState = anchorsDataRepository.state
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

@@ -4,19 +4,22 @@ import kotlinx.coroutines.flow.StateFlow
 
 import com.ghosts.of.history.model.*
 
+data class AnchorsDataState(
+    val anchorsData: Map<AnchorId, AnchorData> = emptyMap(),
+    val visitedAnchorIds: Set<AnchorId> = setOf(),
+)
+
 interface AnchorsDataRepository {
-    val anchorsData: StateFlow<Map<AnchorId, AnchorData>>
+    val state: StateFlow<AnchorsDataState>
 
     suspend fun load()
     suspend fun addVisited(anchorId: AnchorId)
     suspend fun removeVisited(anchorId: AnchorId)
-    fun hasVisited(anchorId: AnchorId): Boolean
 
     suspend fun saveAnchorData(
         anchorId: AnchorId,
-        anchorName: String,
-        geoPosition: GeoPosition?
+        anchorData: AnchorData,
     )
 
-    suspend fun updateAnchorData(anchorId: AnchorId, block: (AnchorData) -> AnchorData)
+    suspend fun updateAnchorData(anchorId: AnchorId, block: suspend (AnchorData) -> AnchorData)
 }

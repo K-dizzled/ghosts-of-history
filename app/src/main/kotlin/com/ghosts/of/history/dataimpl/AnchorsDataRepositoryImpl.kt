@@ -2,7 +2,7 @@ package com.ghosts.of.history.dataimpl
 
 import android.content.Context
 
-import com.ghosts.of.history.data.AnchorsDataRepository
+import com.ghosts.of.history.data.*
 import com.ghosts.of.history.model.*
 import com.ghosts.of.history.utils.saveAnchorSetToFirebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,68 +15,57 @@ class AnchorsDataRepositoryImpl private constructor(
     private val visitedAnchorIdsDataSource: VisitedAnchorIdsDataSource,
 ) : AnchorsDataRepository {
 
-    private val _anchorsData = MutableStateFlow<Map<AnchorId, AnchorData>>(emptyMap())
+    private val _anchorsData = MutableStateFlow(AnchorsDataState())
 
-    override val anchorsData: StateFlow<Map<AnchorId, AnchorData>> = _anchorsData.asStateFlow()
+    override val state = _anchorsData.asStateFlow()
 
     override suspend fun load() {
         val initialAnchorsData = anchorsDataDataSource.load()
         val initialVisitedAnchorIds = visitedAnchorIdsDataSource.load()
 
         _anchorsData.value =
-            initialAnchorsData
-                .map { it.copy(isVisited = initialVisitedAnchorIds.contains(it.anchorId)) }
-                .associateBy { it.anchorId }
+            AnchorsDataState(
+                anchorsData = initialAnchorsData
+                    .associateBy { it.anchorId },
+                visitedAnchorIds = initialVisitedAnchorIds
+            )
     }
 
-
     override suspend fun addVisited(anchorId: AnchorId) {
-        updateAnchorData(anchorId) {
-            it.copy(isVisited = true)
+        _anchorsData.update { state ->
+            val newState = state.copy(visitedAnchorIds = state.visitedAnchorIds + anchorId)
+            visitedAnchorIdsDataSource.save(visitedAnchorIds = newState.visitedAnchorIds)
+            newState
         }
     }
 
     override suspend fun removeVisited(anchorId: AnchorId) {
-        updateAnchorData(anchorId) {
-            it.copy(isVisited = false)
+        _anchorsData.update { state ->
+            val newState = state.copy(visitedAnchorIds = state.visitedAnchorIds - anchorId)
+            visitedAnchorIdsDataSource.save(visitedAnchorIds = newState.visitedAnchorIds)
+            newState
         }
     }
 
-    override fun hasVisited(anchorId: AnchorId): Boolean {
-        val anchorData = anchorsData.value[anchorId] ?: return false
-        return anchorData.isVisited
-    }
-
-    override suspend fun updateAnchorData(anchorId: AnchorId, block: (AnchorData) -> AnchorData) {
-        _anchorsData.update { anchorsData ->
-            val anchorData = anchorsData[anchorId] ?: return@update anchorsData
+    override suspend fun updateAnchorData(anchorId: AnchorId, block: suspend (AnchorData) -> AnchorData) {
+        _anchorsData.update { state ->
+            val anchorData = state.anchorsData[anchorId] ?: return@update state
             val newAnchorData = block(anchorData)
-            val newAnchorsData = anchorsData.toMutableMap().apply {
-                set(anchorId, newAnchorData)
-            }.toMap()
-            saveAnchorSetToFirebase(newAnchorData)
-            visitedAnchorIdsDataSource.save(newAnchorsData.keys)
-            anchorsData
+            val newAnchorsData = state.anchorsData + Pair(anchorId, newAnchorData)
+            anchorsDataDataSource.save(anchorData)
+            state.copy(anchorsData = newAnchorsData)
         }
     }
 
     override suspend fun saveAnchorData(
         anchorId: AnchorId,
-        anchorName: String,
-        geoPosition: GeoPosition?
+        anchorData: AnchorData,
     ) {
-        val anchor = AnchorData(
-            anchorId = anchorId,
-            name = anchorName,
-            description = null,
-            imageName = null,
-            videoName = "",
-            isEnabled = false,
-            scalingFactor = 1.0f,
-            geoPosition = geoPosition,
-            isVisited = false
-        )
-        anchorsDataDataSource.save(anchor)
+        _anchorsData.update { state ->
+            val newAnchorsData = state.anchorsData + Pair(anchorId, anchorData)
+            anchorsDataDataSource.save(anchorData)
+            state.copy(anchorsData = newAnchorsData)
+        }
     }
 
     companion object {
