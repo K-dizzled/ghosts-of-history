@@ -64,6 +64,7 @@ import androidx.lifecycle.lifecycleScope
 
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
  * Main Activity for the Persistent Cloud Anchor Sample.
@@ -205,6 +206,14 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         } catch (e: SecurityException) {
             Log.e("Exception: %s", e.message, e)
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun getDeviceLocationAsync(): Location? {
+        if (locationPermissionGranted) {
+            return fusedLocationProviderClient.lastLocation.await()
+        }
+        return null
     }
 
     private fun setUpTapListener() {
@@ -761,40 +770,31 @@ class CloudAnchorActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                 Log.i(TAG, "Anchor $cloudAnchorId created.")
                 userMessageText.text = getString(R.string.hosting_success)
                 debugText.text = getString(R.string.debug_hosting_success, cloudAnchorId)
-                getDeviceLocation()
                 saveAnchorWithNickname()
             }
-        }
-
-        /** Callback function invoked when the user presses the OK button in the Save Anchor Dialog.  */
-        private fun onAnchorNameEntered(anchorNickname: String) {
-//            lifecycleScope.launch {
-//                getDeviceLocation()
-//                cloudAnchorId?.let { anchorId ->
-//                    saveAnchorToFirebase(anchorId, anchorNickname, lastKnownLocation?.latitude, lastKnownLocation?.longitude)
-//                }
-//            }
-            val intent = Intent()
-            intent.putExtra("anchorName", anchorNickname)
-            intent.putExtra("anchorId", cloudAnchorId ?: "unknown")
-            intent.putExtra("latitude", lastKnownLocation?.latitude)
-            intent.putExtra("longitude", lastKnownLocation?.longitude)
-            setResult(Activity.RESULT_OK, intent)
-            finish()
         }
 
         private fun saveAnchorWithNickname() {
             if (cloudAnchorId == null) {
                 return
             }
-            getDeviceLocation()
-            val hostDialogFragment = HostDialogFragment()
-            // Supply num input as an argument.
-            val args = Bundle()
-            args.putString("nickname", getString(R.string.nickname_default))
-            hostDialogFragment.setOkListener(::onAnchorNameEntered)
-            hostDialogFragment.arguments = args
-            hostDialogFragment.show(supportFragmentManager, "HostDialog")
+            lifecycleScope.launch {
+                val location = getDeviceLocationAsync()
+                val intent = Intent()
+                intent.putExtra("anchorId", cloudAnchorId)
+                intent.putExtra("latitude", location?.latitude)
+                intent.putExtra("longitude", location?.longitude)
+                setResult(Activity.RESULT_OK, intent)
+                finish()
+            }
+//            getDeviceLocation()
+//            val hostDialogFragment = HostDialogFragment()
+//            // Supply num input as an argument.
+//            val args = Bundle()
+//            args.putString("nickname", getString(R.string.nickname_default))
+//            hostDialogFragment.setOkListener(::onAnchorNameEntered)
+//            hostDialogFragment.arguments = args
+//            hostDialogFragment.show(supportFragmentManager, "HostDialog")
         }
     }
 
