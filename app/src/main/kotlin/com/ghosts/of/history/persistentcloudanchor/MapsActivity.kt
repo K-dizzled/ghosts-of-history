@@ -41,10 +41,12 @@ import java.io.File
 
 import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.data.AnchorsDataRepository
+import com.ghosts.of.history.data.AnchorsDataState
 import com.ghosts.of.history.dataimpl.AnchorsDataRepositoryImpl
 import com.ghosts.of.history.model.AnchorId
 import com.ghosts.of.history.utils.fetchImageFromStorage
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlin.coroutines.resume
@@ -67,8 +69,6 @@ class MapsActivity : AppCompatActivity() {
     private lateinit var popUpDialog: Dialog
 
     private var anchorImages: HashMap<String, File> = HashMap()
-
-    private lateinit var anchorsDataRepository: AnchorsDataRepository
 
     private val viewModel: MapsActivityViewModel by viewModels {
         MapsActivityViewModel.Factory
@@ -95,7 +95,6 @@ class MapsActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         lifecycleScope.launch {
-            anchorsDataRepository = AnchorsDataRepositoryImpl(applicationContext)
 
             // Obtain the SupportMapFragment and get notified when the map is ready to be used.
             val mapFragment = supportFragmentManager
@@ -105,7 +104,7 @@ class MapsActivity : AppCompatActivity() {
 
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.anchorsData
+                    viewModel.anchorsDataState
                         .collect {
                             addMarkers(it)
                         }
@@ -127,10 +126,10 @@ class MapsActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun addMarkers(anchorsData: Map<AnchorId, AnchorData>) {
+    private suspend fun addMarkers(anchorsDataState: AnchorsDataState) = coroutineScope {
         map.clear()
-        for ((anchorId, anchorData) in anchorsData) {
-            val color = if (anchorData.isVisited) {
+        for ((anchorId, anchorData) in anchorsDataState.anchorsData) {
+            val color = if (anchorsDataState.visitedAnchorIds.contains(anchorId)) {
                 BitmapDescriptorFactory.HUE_GREEN
             } else {
                 BitmapDescriptorFactory.HUE_RED
@@ -150,12 +149,14 @@ class MapsActivity : AppCompatActivity() {
                     .icon(BitmapDescriptorFactory.defaultMarker(color))
             )
 
-            anchorData.imageName?.let { imageUrl ->
-                anchorImages[anchorId] =
-                    fetchImageFromStorage(imageUrl, applicationContext).getOrElse {
-                        println("Error fetching image from storage: $it")
-                        throw it
-                    }
+            launch {
+                anchorData.imageName?.let { imageUrl ->
+                    anchorImages[anchorId] =
+                        fetchImageFromStorage(imageUrl, applicationContext).getOrElse {
+                            println("Error fetching image from storage: $it")
+                            throw it
+                        }
+                }
             }
 
             marker?.tag = false
@@ -213,8 +214,10 @@ class MapsActivity : AppCompatActivity() {
     }
 
     /** Called when the user clicks a marker.  */
-    suspend fun onMarkerClick(marker: Marker): Boolean {
-        val anchorData: AnchorData? = anchorsDataRepository.anchorsData.value[marker.snippet]
+    private fun onMarkerClick(marker: Marker): Boolean {
+        val anchorData: AnchorData? = viewModel
+            .anchorsDataState.value
+            .anchorsData[marker.snippet]
         val description = anchorData?.description
         val imageUrl = anchorData?.imageName
 

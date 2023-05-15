@@ -102,7 +102,6 @@ suspend fun getAnchorsDataFromFirebase(): List<AnchorData> = Firebase.firestore.
             scalingFactor = (it.get("scaling_factor") as Number).toFloat(),
             geoPosition = geoPosition,
             videoParams = videoParams,
-            isVisited = false
     )
 }
 
