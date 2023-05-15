@@ -65,7 +65,11 @@ class EditActivity : AppCompatActivity() {
         buttonBack.setOnClickListener { finish() }
         val buttonSave = findViewById<Button>(R.id.button_save)
         buttonSave.setOnClickListener { saveChanges() }
+        val buttonDelete = findViewById<Button>(R.id.button_delete)
+        buttonDelete.setOnClickListener { deleteAnchor() }
     }
+
+    fun deleteAnchor() {}
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
