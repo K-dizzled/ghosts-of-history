@@ -54,7 +54,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:hintEnabled="true"
-        android:hint="Latitude">
+        android:hint="Longtitude">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_longtitude"
@@ -88,6 +88,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginRight="10dp"
             android:text="Back"/>
 
         <Button
@@ -95,8 +96,26 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginLeft="10dp"
             android:text="Save"/>
 
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1"
+        android:gravity="center|bottom"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/button3"
+            android:layout_width="145dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center"
+            android:backgroundTint="@color/delete_button_background_color"
+            android:text="Delete" />
+    </LinearLayout>
+
 
 </LinearLayout>

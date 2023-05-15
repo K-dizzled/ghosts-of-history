@@ -121,8 +121,8 @@ class EditActivity : AppCompatActivity() {
     private fun saveChanges() {
         val newAnchorData = AnchorData(
                 anchorId = anchorData.anchorId,
-                name = editName?.text.toString() ?: anchorData.name,
-                description = editDescription?.text.toString() ?: anchorData.description,
+                name = editName?.text.toString().let { it.ifEmpty { null } } ?: anchorData.name,
+                description = editDescription?.text.toString().let { it.ifEmpty { null } } ?: anchorData.description,
                 imageName = handleImage() ?: anchorData.imageName,
                 videoName = handleVideo() ?: anchorData.videoName,
                 isEnabled = anchorData.isEnabled,
