@@ -81,31 +81,31 @@ class MainLobbyActivity : AppCompatActivity() {
         //check runtime permission
         if (android.os.Build.VERSION.SDK_INT < 33) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                    PackageManager.PERMISSION_DENIED) {
+                PackageManager.PERMISSION_DENIED
+            ) {
                 //permission denied
                 val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE);
                 //show popup to request runtime permission
                 requestPermissions(permissions, PERMISSION_CODE);
-            }
-            else{
+            } else {
                 //permission already granted
                 pickMediaFromGallery(pickCode);
             }
         } else {
             if (checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) ==
-                    PackageManager.PERMISSION_DENIED ||
-                    checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO) ==
-                    PackageManager.PERMISSION_DENIED) {
+                PackageManager.PERMISSION_DENIED ||
+                checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO) ==
+                PackageManager.PERMISSION_DENIED
+            ) {
                 //permission denied
 
                 val permissions = arrayOf(
-                        Manifest.permission.READ_MEDIA_IMAGES,
-                        Manifest.permission.READ_MEDIA_VIDEO
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_MEDIA_VIDEO
                 )
                 //show popup to request runtime permission
                 requestPermissions(permissions, PERMISSION_CODE);
-            }
-            else{
+            } else {
                 //permission already granted
                 pickMediaFromGallery(pickCode);
             }
@@ -118,17 +118,21 @@ class MainLobbyActivity : AppCompatActivity() {
         startActivityForResult(intent, pickCode)
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when(requestCode){
+        when (requestCode) {
             PERMISSION_CODE -> {
                 if (grantResults.isNotEmpty() && grantResults[0] ==
-                        PackageManager.PERMISSION_GRANTED){
+                    PackageManager.PERMISSION_GRANTED
+                ) {
                     //permission from popup granted
                     pickMediaFromGallery(IMAGE_PICK_CODE)
                     pickMediaFromGallery(VIDEO_PICK_CODE)
-                }
-                else{
+                } else {
                     //permission from popup denied
                     Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
                 }
@@ -145,6 +149,7 @@ class MainLobbyActivity : AppCompatActivity() {
                     imageView.setImageURI(data?.data)
                     selectedImage = data?.data
                 }
+
                 VIDEO_PICK_CODE -> {
                     val videoUri = data?.data
                     selectedVideo = videoUri
@@ -152,39 +157,43 @@ class MainLobbyActivity : AppCompatActivity() {
                     val videoButton = findViewById<Button>(R.id.button_video_select)
                     videoButton.text = videoFileName
                 }
+
                 REQUEST_CODE_FROM_CHILD -> {
                     if (data == null) {
                         return
                     }
+                    lifecycleScope.launch {
+                        //val anchorName = data.getStringExtra("anchorName")!!
+                        val anchorId = data.getStringExtra("anchorId")!!
 
-                    //val anchorName = data.getStringExtra("anchorName")!!
-                    val anchorId = data.getStringExtra("anchorId")!!
+                        val label =
+                            findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.name_input_text).text
+                        val description =
+                            findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.description_input_text).text
+                        val image = selectedImage
+                        val imageName = if (image != null) {
+                            uploadImageToStorage(image)
+                            image.lastPathSegment
+                        } else null
+                        val video = selectedVideo
+                        val videoName = if (video != null) {
+                            uploadVideoToStorage(video)
+                            video.lastPathSegment!!
+                        } else ""
+                        //val image = File(selectedImage?.path!!)
+                        //val video = File(selectedVideo?.path!!)
 
-                    val label = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.name_input_text).text
-                    val description = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.description_input_text).text
-                    val image = selectedImage
-                    val imageName = if (image != null) {
-                        lifecycleScope.launch { uploadImageToStorage(image) }
-                        image.lastPathSegment
-                    } else null
-                    val video = selectedVideo
-                    val videoName = if (video != null) {
-                        lifecycleScope.launch { uploadVideoToStorage(video) }
-                        video.lastPathSegment!!
-                    } else ""
-                    //val image = File(selectedImage?.path!!)
-                    //val video = File(selectedVideo?.path!!)
+                        val geoposition =
+                            if (data.hasExtra("latitude") && data.hasExtra("longitude")) {
+                                val latitude = data.getDoubleExtra("latitude", 0.0)
+                                val longitude = data.getDoubleExtra("longitude", 0.0)
 
-                    val geoposition = if (data.hasExtra("latitude") && data.hasExtra("longitude")) {
-                        val latitude = data.getDoubleExtra("latitude", 0.0)
-                        val longitude = data.getDoubleExtra("longitude", 0.0)
+                                GeoPosition(latitude, longitude)
+                            } else {
+                                null
+                            }
 
-                        GeoPosition(latitude, longitude)
-                    } else {
-                        null
-                    }
-
-                    val anchorData = AnchorData(
+                        val anchorData = AnchorData(
                             anchorId,
                             label.toString(),
                             description.toString(),
@@ -194,9 +203,8 @@ class MainLobbyActivity : AppCompatActivity() {
                             1.0f,
                             geoposition,
                             null
-                    )
+                        )
 
-                    lifecycleScope.launch {
                         viewModel.saveAnchorData(anchorData)
                     }
                 }
