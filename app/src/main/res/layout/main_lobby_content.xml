@@ -54,6 +54,9 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:id="@+id/name_input_text"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="20dp"
                 android:layout_height="wrap_content"
                 android:hint="Name of the exhibit" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -73,6 +76,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/description_input_text"
+                android:padding="20dp"
                 android:hint="Description of the exhibit" />
         </com.google.android.material.textfield.TextInputLayout>
 
