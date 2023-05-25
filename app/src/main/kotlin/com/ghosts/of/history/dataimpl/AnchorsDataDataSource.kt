@@ -13,4 +13,7 @@ class AnchorsDataDataSource() {
 
     suspend fun load() =
         getAnchorsDataFromFirebase()
+
+    suspend fun remove(anchorId: AnchorId) =
+        removeAnchorDataFromFirebase(anchorId)
 }

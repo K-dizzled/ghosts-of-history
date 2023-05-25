@@ -202,13 +202,13 @@ class MapsActivity : AppCompatActivity() {
         val popUpDescription = popUpDialog.findViewById<View>(R.id.description) as TextView
         popUpDescription.text = description
 
-        if (imagePath != null) {
+        val url = imagePath?.let { getFileURL(it) }
+        if (url != null) {
             val popUpImage = popUpDialog.findViewById(R.id.popImage) as ImageView
-            popUpImage.load(getFileURL(imagePath)) {
+            popUpImage.load(url) {
                 crossfade(true)
             }
         }
-
 
         popUpDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popUpDialog.show()

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import androidx.activity.viewModels
@@ -12,6 +13,10 @@ import androidx.lifecycle.lifecycleScope
 import com.ghosts.of.history.R
 import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.model.GeoPosition
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -64,15 +69,19 @@ class EditActivity : AppCompatActivity() {
             startActivityForResult(intent, SELECT_VIDEO_REQUEST)
         }
 
-        val buttonBack = findViewById<Button>(R.id.button_back)
-        buttonBack.setOnClickListener { finish() }
-        val buttonSave = findViewById<Button>(R.id.button_save)
-        buttonSave.setOnClickListener { saveChanges() }
-        val buttonDelete = findViewById<Button>(R.id.button_delete)
-        buttonDelete.setOnClickListener { deleteAnchor() }
+        lifecycleScope.launch {
+            val buttonBack = findViewById<Button>(R.id.button_back)
+            buttonBack.clicks().collect { finish() }
+            val buttonSave = findViewById<Button>(R.id.button_save)
+            buttonSave.clicks().collect { saveChanges() }
+            val buttonDelete = findViewById<Button>(R.id.button_delete)
+            buttonDelete.clicks().collect { deleteAnchor() }
+        }
     }
 
-    fun deleteAnchor() {}
+    private suspend fun deleteAnchor() {
+        viewModel.removeAnchorData(anchorData.anchorId)
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -125,7 +134,7 @@ class EditActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveChanges() {
+    private suspend fun saveChanges() {
         val newName = editName?.text.toString().let { it.ifEmpty { null } }
         val newDescription = editDescription?.text.toString().let { it.ifEmpty { null } }
 
@@ -136,9 +145,12 @@ class EditActivity : AppCompatActivity() {
             videoName = handleVideo() ?: anchorData.videoName,
             geoPosition = getGeoPosition() ?: anchorData.geoPosition,
         )
-        lifecycleScope.launch {
-            viewModel.updateAnchorData(newAnchorData)
-            finish()
-        }
+        viewModel.updateAnchorData(newAnchorData)
+        finish()
     }
+}
+
+private suspend fun Button.clicks(): Flow<Unit> = callbackFlow {
+    setOnClickListener { trySend(Unit) }
+    awaitClose { setOnClickListener { } }
 }

@@ -6,14 +6,18 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.ghosts.of.history.data.AnchorsDataRepository
-import com.ghosts.of.history.data.AnchorsDataState
 import com.ghosts.of.history.model.AnchorData
+import com.ghosts.of.history.model.AnchorId
 
 class EditActivityViewModel constructor(
         private val anchorsDataRepository: AnchorsDataRepository
 ) : ViewModel() {
     suspend fun updateAnchorData(data: AnchorData) {
         anchorsDataRepository.updateAnchorData(data.anchorId) { data }
+    }
+
+    suspend fun removeAnchorData(anchorId: AnchorId) {
+        anchorsDataRepository.removeAnchorData(anchorId)
     }
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

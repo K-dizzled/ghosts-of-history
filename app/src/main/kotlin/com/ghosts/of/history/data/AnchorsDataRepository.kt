@@ -22,4 +22,6 @@ interface AnchorsDataRepository {
     )
 
     suspend fun updateAnchorData(anchorId: AnchorId, block: suspend (AnchorData) -> AnchorData)
+
+    suspend fun removeAnchorData(anchorId: AnchorId)
 }

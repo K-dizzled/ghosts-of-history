@@ -31,6 +31,10 @@ class AnchorsDataRepositoryImpl private constructor(
             )
     }
 
+    override suspend fun removeAnchorData(anchorId: AnchorId) {
+        anchorsDataDataSource.remove(anchorId)
+    }
+
     override suspend fun addVisited(anchorId: AnchorId) {
         _anchorsData.update { state ->
             val newState = state.copy(visitedAnchorIds = state.visitedAnchorIds + anchorId)
