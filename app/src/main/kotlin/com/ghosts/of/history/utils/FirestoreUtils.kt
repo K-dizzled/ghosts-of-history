@@ -74,7 +74,7 @@ suspend fun saveAnchorSetToFirebase(anchor: AnchorData) {
         "scaling_factor" to anchor.scalingFactor,
         "latitude" to anchor.geoPosition?.latitude,
         "longitude" to anchor.geoPosition?.longitude,
-        "video_params" to videoParams,
+        "video_params" to videoParams?.toList(),
     )
     Firebase.firestore.collection(firebaseCollection).document(anchor.anchorId).set(document).await()
 }

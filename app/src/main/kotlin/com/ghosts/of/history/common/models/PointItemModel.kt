@@ -10,15 +10,18 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.ghosts.of.history.R
 import com.ghosts.of.history.model.AnchorData
 import com.ghosts.of.history.persistentcloudanchor.AnchorListActivity
 import com.ghosts.of.history.persistentcloudanchor.AnchorListActivityViewModel
 import com.ghosts.of.history.persistentcloudanchor.EditActivity
 import com.ghosts.of.history.utils.fetchImageFromStorage
+import com.ghosts.of.history.utils.getFileURL
 import com.ghosts.of.history.utils.saveAnchorSetToFirebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.ghosts.of.history.utils.getFileURL
 import kotlinx.serialization.json.Json
 
 
@@ -53,13 +56,23 @@ class ItemAdapter(private val itemList: List<ItemModel>, private val viewModel: 
                 viewModel.setEnabled(item.anchorData.anchorId, isChecked)
             }
         }
+
         item.scope.launch {
-            item.anchorData.imageName?.let {imgUrl ->
-                val image = fetchImageFromStorage(imgUrl, item.context).getOrElse { return@let }
-                val bitmap = BitmapFactory.decodeFile(image.absolutePath)
-                holder.imageView.setImageBitmap(bitmap)
+            val url = item.anchorData.imageName?.let { getFileURL(it) }
+            if (url != null) {
+                holder.imageView.load(url) {
+                    crossfade(true)
+                }
             }
         }
+//        holder.imageView.load(item.anchorData.imageName)
+//        item.scope.launch {
+//            item.anchorData.imageName?.let {imgUrl ->
+//                val image = fetchImageFromStorage(imgUrl, item.context).getOrElse { return@let }
+//                val bitmap = BitmapFactory.decodeFile(image.absolutePath)
+//                holder.imageView.setImageBitmap(bitmap)
+//            }
+//        }
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
