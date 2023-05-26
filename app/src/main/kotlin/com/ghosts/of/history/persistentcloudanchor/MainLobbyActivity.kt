@@ -25,8 +25,11 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.OpenableColumns
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -166,6 +169,11 @@ class MainLobbyActivity : AppCompatActivity() {
                         //val anchorName = data.getStringExtra("anchorName")!!
                         val anchorId = data.getStringExtra("anchorId")!!
                         Toast.makeText(applicationContext, "Saving...", Toast.LENGTH_SHORT).show();
+                        val progressBar = findViewById<ProgressBar>(R.id.progress_circular)
+                        progressBar.visibility = View.VISIBLE
+
+                        val restOfTheView = findViewById<LinearLayout>(R.id.lobby_content)
+                        restOfTheView.visibility = View.GONE
                         val label =
                             findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.name_input_text).text
                         val description =
