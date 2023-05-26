@@ -202,7 +202,7 @@ class MapsActivity : AppCompatActivity() {
         val popUpDescription = popUpDialog.findViewById<View>(R.id.description) as TextView
         popUpDescription.text = description
 
-        val url = imagePath?.let { getFileURL(it) }
+        val url = imagePath?.let { getFileURL("images/$it") }
         if (url != null) {
             val popUpImage = popUpDialog.findViewById(R.id.popImage) as ImageView
             popUpImage.load(url) {

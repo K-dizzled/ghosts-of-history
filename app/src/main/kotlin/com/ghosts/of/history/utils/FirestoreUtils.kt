@@ -127,6 +127,7 @@ suspend fun fetchImageFromStorage(path: String, context: Context): Result<File> 
 
 suspend fun getFileURL(path: String): String? =
     try {
+        println("Poshel nahui: $path")
         Firebase.storage.reference.child(path).downloadUrl.await().toString()
     } catch (e: StorageException) {
         null

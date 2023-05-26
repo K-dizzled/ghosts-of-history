@@ -58,7 +58,7 @@ class ItemAdapter(private val itemList: List<ItemModel>, private val viewModel: 
         }
 
         item.scope.launch {
-            val url = item.anchorData.imageName?.let { getFileURL(it) }
+            val url = item.anchorData.imageName?.let { getFileURL("images/$it") }
             if (url != null) {
                 holder.imageView.load(url) {
                     crossfade(true)
