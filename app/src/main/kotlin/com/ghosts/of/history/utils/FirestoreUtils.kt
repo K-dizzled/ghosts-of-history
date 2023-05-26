@@ -165,11 +165,11 @@ suspend fun fetchAllFilenames(path: String): Result<List<String>> = Result.runCa
 }
 
 suspend fun uploadImageToStorage(uri: Uri) {
-    Firebase.storage.reference.child("images/").putFile(uri).await()
+    Firebase.storage.reference.child("images/${uri.lastPathSegment}").putFile(uri).await()
 }
 
 suspend fun uploadVideoToStorage(uri: Uri) {
-    Firebase.storage.reference.child("videos/").putFile(uri).await()
+    Firebase.storage.reference.child("videos/${uri.lastPathSegment}").putFile(uri).await()
 }
 
 suspend fun uploadFileToStorage(path: String, uri: Uri) {

@@ -165,7 +165,7 @@ class MainLobbyActivity : AppCompatActivity() {
                     lifecycleScope.launch {
                         //val anchorName = data.getStringExtra("anchorName")!!
                         val anchorId = data.getStringExtra("anchorId")!!
-
+                        Toast.makeText(applicationContext, "Saving...", Toast.LENGTH_SHORT).show();
                         val label =
                             findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.name_input_text).text
                         val description =
@@ -206,6 +206,8 @@ class MainLobbyActivity : AppCompatActivity() {
                         )
 
                         viewModel.saveAnchorData(anchorData)
+                        Toast.makeText(applicationContext, "Saved", Toast.LENGTH_SHORT).show();
+                        finish()
                     }
                 }
             }
